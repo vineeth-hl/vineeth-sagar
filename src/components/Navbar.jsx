@@ -18,6 +18,11 @@ const Navbar = () => {
             className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-full max-w-2xl px-4"
         >
             <div className="flex items-center justify-between px-6 py-3 rounded-full bg-black/20 backdrop-blur-xl border border-white/10 shadow-2xl">
+                {/* Logo */}
+                <a href="#" className="mr-8">
+                    <img src="/assets/V_logo.png" alt="Logo" className="w-8 h-8 object-contain hover:scale-110 transition-transform" />
+                </a>
+
                 {/* Links */}
                 <ul className="flex gap-6 text-sm font-medium text-gray-300">
                     {['About', 'Skills', 'Projects', 'Achievements', 'Contact'].map((item) => (
