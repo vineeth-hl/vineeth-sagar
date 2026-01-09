@@ -18,9 +18,9 @@ const Navbar = () => {
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-[95%] max-w-2xl px-0 md:px-4"
+            className="fixed top-6 inset-x-0 mx-auto z-[100] w-[95%] max-w-2xl px-0 md:px-4"
         >
-            <div className="relative flex items-center justify-between px-6 py-3 rounded-full bg-black/20 backdrop-blur-xl border border-white/10 shadow-2xl">
+            <div className="relative flex items-center justify-center px-6 py-3 rounded-full bg-black/20 backdrop-blur-xl border border-white/10 shadow-2xl">
 
                 {/* --- MOBILE VIEW: Name + Hamburger --- */}
                 <div className="md:hidden flex items-center justify-between w-full">
