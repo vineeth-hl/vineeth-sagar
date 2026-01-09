@@ -36,13 +36,8 @@ const Navbar = () => {
                     </button>
                 </div>
 
-                {/* --- DESKTOP VIEW: Logo + Links + Resume --- */}
-                <div className="hidden md:flex items-center justify-between w-full">
-                    {/* Logo */}
-                    <a href="#" className="mr-8">
-                        <img src="/assets/V_logo.png" alt="Logo" className="w-8 h-8 object-contain hover:scale-110 transition-transform" />
-                    </a>
-
+                {/* --- DESKTOP VIEW: Links + Resume --- */}
+                <div className="hidden md:flex items-center justify-center gap-8 w-full">
                     {/* Links */}
                     <ul className="flex gap-6 text-sm font-medium text-gray-300">
                         {navLinks.map((item) => (
@@ -63,7 +58,6 @@ const Navbar = () => {
                         href="/resume.pdf"
                         download="Resume"
                         onClick={handleDownload}
-                        className="ml-8"
                     >
                         <motion.button
                             whileHover={{ scale: 1.05 }}
