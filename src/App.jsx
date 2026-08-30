@@ -2,10 +2,12 @@ import React, { useEffect } from 'react';
 import Lenis from '@studio-freight/lenis';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+import LaptopDive from './components/LaptopDive';
 import About from './components/About';
 import Skills from './components/Skills';
 import FeaturedProjects from './components/FeaturedProjects';
 import Achievements from './components/Achievements';
+import ActivityHeatmap from './components/ActivityHeatmap';
 import Contact from './components/Contact';
 import VisitorCounter from './components/VisitorCounter';
 import Footer from './components/Footer';
@@ -22,6 +24,8 @@ const App = () => {
       smoothTouch: false,
       touchMultiplier: 2,
     });
+
+    if (import.meta.env.DEV) window.__lenis = lenis;
 
     function raf(time) {
       lenis.raf(time);
@@ -42,10 +46,12 @@ const App = () => {
 
       <main>
         <Hero />
+        <LaptopDive />
         <About />
         <Skills />
         <FeaturedProjects />
         <Achievements />
+        <ActivityHeatmap />
         <Contact />
         <VisitorCounter />
         <Footer />

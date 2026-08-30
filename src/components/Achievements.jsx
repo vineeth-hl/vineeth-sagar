@@ -21,24 +21,7 @@ const achievements = [
 
 const Achievements = () => {
     return (
-        <section id="achievements" className="py-24 px-6 md:px-12 bg-black relative overflow-hidden border-t border-white/5">
-            {/* Background Texture & Blobs */}
-            <motion.div
-                animate={{ backgroundPosition: ["0rem 0rem", "4rem 4rem"] }}
-                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,black,transparent)]"
-            />
-            <motion.div
-                animate={{ x: [0, 50, 0], y: [0, 50, 0], opacity: [0.4, 0.7, 0.4] }}
-                transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                className="absolute top-1/4 -left-20 w-80 h-80 bg-accent-purple/40 rounded-full blur-[100px] -z-10"
-            />
-            <motion.div
-                animate={{ x: [0, -50, 0], y: [0, -50, 0], opacity: [0.3, 0.6, 0.3] }}
-                transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-                className="absolute bottom-1/4 -right-20 w-96 h-96 bg-blue-500/30 rounded-full blur-[120px] -z-10"
-            />
-
+        <section id="achievements" className="py-24 px-6 md:px-12 bg-background relative border-t border-line">
             <div className="max-w-7xl mx-auto relative z-10">
                 {/* Header */}
                 <div className="text-center mb-16">
@@ -46,7 +29,7 @@ const Achievements = () => {
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="text-4xl md:text-5xl font-black text-center mb-4 tracking-tight bg-gradient-to-r from-white via-accent-purple to-purple-500 bg-clip-text text-transparent"
+                        className="text-4xl md:text-5xl font-extrabold text-center mb-4 text-accent-gold"
                     >
                         Achievements
                     </motion.h2>
@@ -54,8 +37,8 @@ const Achievements = () => {
                         initial={{ scaleX: 0 }}
                         whileInView={{ scaleX: 1 }}
                         viewport={{ once: true }}
-                        transition={{ delay: 0.2, duration: 0.8 }}
-                        className="h-1.5 w-24 bg-gradient-to-r from-accent-purple to-purple-500 mx-auto rounded-full"
+                        transition={{ delay: 0.15, duration: 0.6 }}
+                        className="h-0.5 w-16 bg-accent-blue mx-auto rounded-full"
                     />
                 </div>
 
@@ -77,36 +60,35 @@ const AchievementCard = ({ achievement, index }) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: index * 0.1, duration: 0.5 }}
-            className="group bg-zinc-900/50 backdrop-blur-sm border border-white/5 rounded-2xl overflow-hidden hover:border-yellow-500/30 transition-all duration-300 flex flex-col"
+            className="group bg-card border border-line rounded-lg overflow-hidden hover:border-accent-blue/50 transition-colors duration-300 flex flex-col"
         >
             {/* Image Container */}
-            <div className="relative h-64 overflow-hidden">
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300 z-10" />
+            <div className="relative h-56 overflow-hidden border-b border-line">
                 <img
                     src={achievement.image}
                     alt={achievement.title}
-                    className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105"
+                    className="w-full h-full object-cover grayscale-[35%] transition-all duration-500 group-hover:grayscale-0 group-hover:scale-105"
                 />
 
                 {/* Badge Overlay */}
-                <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 flex items-center gap-2 z-20">
-                    <FaTrophy className="text-yellow-500" />
-                    <span className="text-xs text-white font-medium">Winner</span>
+                <div className="absolute top-3 right-3 bg-background/90 px-3 py-1 rounded border border-line flex items-center gap-2 z-20">
+                    <FaTrophy className="text-amber-400" />
+                    <span className="text-xs text-primary font-medium">Winner</span>
                 </div>
             </div>
 
             {/* Content */}
-            <div className="p-8 flex flex-col flex-grow">
-                <div className="flex items-center gap-2 mb-3 text-yellow-500 text-sm font-mono tracking-wider">
+            <div className="p-7 flex flex-col flex-grow">
+                <div className="flex items-center gap-2 mb-3 text-accent-blue text-xs font-mono uppercase tracking-wider">
                     <FaUniversity />
                     <span>{achievement.institute}</span>
                 </div>
 
-                <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-yellow-500 transition-colors">
+                <h3 className="text-xl font-bold text-primary mb-3 group-hover:text-accent-blue transition-colors">
                     {achievement.title}
                 </h3>
 
-                <p className="text-gray-400 text-base leading-relaxed">
+                <p className="text-secondary text-sm leading-relaxed">
                     {achievement.details}
                 </p>
             </div>

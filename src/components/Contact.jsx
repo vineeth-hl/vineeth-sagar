@@ -4,136 +4,81 @@ import { FaEnvelope, FaLinkedin, FaGithub, FaInstagram, FaPaperPlane, FaPhoneAlt
 
 const Contact = () => {
     return (
-        <section id="contact" className="relative py-32 px-6 md:px-12 min-h-screen bg-black overflow-hidden relative">
-            {/* Background Elements */}
-            <motion.div
-                animate={{ backgroundPosition: ["0rem 0rem", "4rem 4rem"] }}
-                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"
-            />
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-black via-transparent to-black z-0 pointer-events-none" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent-purple/30 blur-[120px] rounded-full z-0" />
-
+        <section id="contact" className="relative py-28 px-6 md:px-12 bg-background border-t border-line">
             <div className="relative z-10 max-w-7xl mx-auto">
                 <div className="text-center mb-16">
                     <motion.h2
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="text-4xl md:text-5xl font-black text-center mb-4 tracking-tight bg-gradient-to-r from-white via-accent-purple to-purple-500 bg-clip-text text-transparent"
+                        className="text-4xl md:text-5xl font-extrabold text-center mb-4 text-accent-gold"
                     >
-                        GET IN TOUCH
+                        Get in Touch
                     </motion.h2>
                     <motion.div
                         initial={{ scaleX: 0 }}
                         whileInView={{ scaleX: 1 }}
                         viewport={{ once: true }}
-                        transition={{ delay: 0.2, duration: 0.8 }}
-                        className="h-1.5 w-24 bg-gradient-to-r from-accent-purple to-purple-500 mx-auto rounded-full"
+                        transition={{ delay: 0.15, duration: 0.6 }}
+                        className="h-0.5 w-16 bg-accent-blue mx-auto rounded-full"
                     />
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch">
-                    {/* Left Column: Contact Info */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+                    {/* Left: Contact info */}
                     <motion.div
-                        initial={{ opacity: 0, x: -50 }}
+                        initial={{ opacity: 0, x: -30 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.6 }}
-                        className="bg-zinc-900/50 backdrop-blur-md border border-white/10 p-6 md:p-8 rounded-3xl h-full flex flex-col justify-between gap-6"
+                        transition={{ duration: 0.5 }}
+                        className="bg-card border border-line p-6 md:p-8 rounded-lg h-full flex flex-col gap-6"
                     >
                         <div>
-                            <h3 className="text-2xl font-bold text-white mb-4">Contact Information</h3>
-                            <p className="text-gray-400 text-base leading-relaxed mb-6">
-                                Connect with me through these platforms. I'm always open to discussing new projects, creative ideas or opportunities to be part of your visions.
+                            <h3 className="text-xl font-bold text-primary mb-3">Contact Information</h3>
+                            <p className="text-secondary text-sm leading-relaxed">
+                                Open to internships, collaborations and interesting problems. The fastest way to reach me
+                                is email.
                             </p>
                         </div>
 
-                        <div className="space-y-4">
-                            <ContactItem
-                                icon={<FaPhoneAlt />}
-                                label="Phone"
-                                value="+91 7019687761"
-                                href="tel:+917019687761"
-                                color="text-green-400"
-                            />
-                            <ContactItem
-                                icon={<FaEnvelope />}
-                                label="Email"
-                                value="vineethsagarhl0@gmail.com"
-                                href="mailto:vineethsagarhl0@gmail.com"
-                                color="text-red-400"
-                            />
-                            <ContactItem
-                                icon={<FaLinkedin />}
-                                label="LinkedIn"
-                                value="Vineeth Sagar H L"
-                                href="https://www.linkedin.com/in/vineeth-sagar-h-l"
-                                color="text-blue-400"
-                            />
-                            <ContactItem
-                                icon={<FaGithub />}
-                                label="GitHub"
-                                value="Vineeth-Sagar"
-                                href="https://github.com/Vineeth-Sagar"
-                                color="text-gray-200"
-                            />
-                            <ContactItem
-                                icon={<FaInstagram />}
-                                label="Instagram"
-                                value="@vineeth_sagar006"
-                                href="https://www.instagram.com/vineeth_sagar006"
-                                color="text-pink-400"
-                            />
+                        <div className="space-y-2">
+                            <ContactItem icon={<FaEnvelope />} label="Email" value="vineethsagarhl0@gmail.com" href="mailto:vineethsagarhl0@gmail.com" />
+                            <ContactItem icon={<FaPhoneAlt />} label="Phone" value="+91 70196 87761" href="tel:+917019687761" />
+                            <ContactItem icon={<FaLinkedin />} label="LinkedIn" value="Vineeth Sagar H L" href="https://www.linkedin.com/in/vineeth-sagar-h-l" />
+                            <ContactItem icon={<FaGithub />} label="GitHub" value="Vineeth-Sagar" href="https://github.com/Vineeth-Sagar" />
+                            <ContactItem icon={<FaInstagram />} label="Instagram" value="@vineeth_sagar006" href="https://www.instagram.com/vineeth_sagar006" />
                         </div>
                     </motion.div>
 
-                    {/* Right Column: Message Form */}
+                    {/* Right: Message form */}
                     <motion.div
-                        initial={{ opacity: 0, x: 50 }}
+                        initial={{ opacity: 0, x: 30 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
-                        className="bg-zinc-900/50 backdrop-blur-md border border-white/10 p-6 md:p-8 rounded-3xl h-full flex flex-col"
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                        className="bg-card border border-line p-6 md:p-8 rounded-lg h-full flex flex-col"
                     >
-                        <h3 className="text-2xl font-bold text-white mb-6">Send Me a Message</h3>
+                        <h3 className="text-xl font-bold text-primary mb-6">Send a Message</h3>
                         <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Your Name</label>
-                                <input
-                                    type="text"
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-purple focus:ring-1 focus:ring-accent-purple transition-all text-sm"
-                                    placeholder="Enter your name"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Your Email</label>
-                                <input
-                                    type="email"
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-purple focus:ring-1 focus:ring-accent-purple transition-all text-sm"
-                                    placeholder="Enter your email"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Subject</label>
-                                <input
-                                    type="text"
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-purple focus:ring-1 focus:ring-accent-purple transition-all text-sm"
-                                    placeholder="Discussion topic"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Your Message</label>
-                                <textarea
-                                    rows="4"
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent-purple focus:ring-1 focus:ring-accent-purple transition-all resize-none text-sm"
-                                    placeholder="How can I help you?"
-                                />
-                            </div>
+                            <Field label="Your Name">
+                                <input type="text" name="name" className={inputCls} placeholder="Jane Doe" />
+                            </Field>
+                            <Field label="Your Email">
+                                <input type="email" name="email" className={inputCls} placeholder="jane@example.com" />
+                            </Field>
+                            <Field label="Subject">
+                                <input type="text" name="subject" className={inputCls} placeholder="Project discussion" />
+                            </Field>
+                            <Field label="Your Message">
+                                <textarea rows="4" name="message" className={`${inputCls} resize-none`} placeholder="How can I help?" />
+                            </Field>
 
-                            <button className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-base tracking-wide hover:opacity-90 transition-opacity flex items-center justify-center gap-2 group">
+                            <button
+                                type="submit"
+                                className="w-full py-3 rounded-md bg-accent-blue text-white font-semibold text-sm tracking-wide hover:bg-[#1a7fe0] transition-colors flex items-center justify-center gap-2 group"
+                            >
                                 Send Message
-                                <FaPaperPlane className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform text-xs" />
+                                <FaPaperPlane className="text-xs transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                             </button>
                         </form>
                     </motion.div>
@@ -143,19 +88,29 @@ const Contact = () => {
     );
 };
 
-const ContactItem = ({ icon, label, value, href, color }) => (
+const inputCls =
+    'w-full bg-background border border-line rounded-md px-4 py-3 text-primary placeholder:text-secondary/60 focus:outline-none focus:border-accent-blue transition-colors text-sm';
+
+const Field = ({ label, children }) => (
+    <div className="space-y-1.5">
+        <label className="text-[11px] font-medium text-secondary uppercase tracking-wider">{label}</label>
+        {children}
+    </div>
+);
+
+const ContactItem = ({ icon, label, value, href }) => (
     <a
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-4 group hover:bg-white/5 p-3 rounded-xl transition-all"
+        className="flex items-center gap-4 group p-3 rounded-md border border-transparent hover:border-line hover:bg-background transition-colors"
     >
-        <div className={`w-12 h-12 rounded-full bg-black/50 flex items-center justify-center text-xl border border-white/10 group-hover:scale-110 transition-transform ${color}`}>
+        <div className="w-10 h-10 rounded-md bg-background flex items-center justify-center text-base border border-line text-secondary group-hover:text-accent-blue transition-colors">
             {icon}
         </div>
         <div>
-            <h4 className="text-gray-500 text-xs font-medium uppercase tracking-wider mb-1 group-hover:text-gray-300 transition-colors">{label}</h4>
-            <p className="text-white text-base font-semibold group-hover:text-accent-purple transition-colors break-all">{value}</p>
+            <h4 className="text-secondary text-[11px] font-medium uppercase tracking-wider mb-0.5">{label}</h4>
+            <p className="text-primary text-sm font-semibold group-hover:text-accent-blue transition-colors break-all">{value}</p>
         </div>
     </a>
 );
