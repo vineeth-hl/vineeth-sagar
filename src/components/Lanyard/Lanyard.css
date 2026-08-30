@@ -1,0 +1,16 @@
+/* React Bits Lanyard wrapper. Upstream uses height: 100vh (full-screen demo);
+   here it's embedded in the About grid column, so height comes from the parent
+   (which sets a fixed px height) and this stays 100%. */
+.lanyard-wrapper {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  /* rigid floor so the WebGL canvas never collapses / distorts its aspect */
+  min-height: 460px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: scale(1);
+  transform-origin: center;
+}

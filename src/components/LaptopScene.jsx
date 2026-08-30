@@ -3,6 +3,10 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { RoundedBox, ContactShadows, Environment, Lightformer, Instances, Instance, MeshReflectorMaterial } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
+import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js';
+
+// required once so <rectAreaLight> actually emits (loads its BRDF LUTs)
+RectAreaLightUniformsLib.init();
 
 /*
  * ─────────────────────────────────────────────────────────────────────────────
@@ -37,21 +41,25 @@ const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2
 const easeInOutExpo = (t) =>
     t <= 0 ? 0 : t >= 1 ? 1 : t < 0.5 ? Math.pow(2, 20 * t - 10) / 2 : (2 - Math.pow(2, -20 * t + 10)) / 2;
 
-/* Procedural "screen" texture — deliberately DARK: base #0D0D0D (the exact page
-   background) with only a faint cool bloom from the centre. Even at full
-   "powered-on" brightness this never goes light, so when the screen fills the
-   viewport there is nothing bright to flash. */
+/* Procedural "screen" texture — a BRIGHT powered-on monitor: deep blue at the
+   top blending to electric cyan, with a hot near-white bloom from the centre.
+   Drives both `map` and `emissiveMap`, so with a high emissiveIntensity the
+   panel genuinely glows and blooms as the camera dives into it. */
 function makeScreenTexture() {
     const c = document.createElement('canvas');
     c.width = 512;
     c.height = 320;
     const g = c.getContext('2d');
-    g.fillStyle = '#0d0d0d';
+    const lin = g.createLinearGradient(0, 0, 0, 320);
+    lin.addColorStop(0, '#173a94');
+    lin.addColorStop(0.55, '#2f83db');
+    lin.addColorStop(1, '#8fdcff');
+    g.fillStyle = lin;
     g.fillRect(0, 0, 512, 320);
-    const rg = g.createRadialGradient(256, 148, 16, 256, 148, 330);
-    rg.addColorStop(0, 'rgba(122,152,224,0.20)');
-    rg.addColorStop(0.55, 'rgba(60,78,140,0.06)');
-    rg.addColorStop(1, 'rgba(13,13,13,0)');
+    const rg = g.createRadialGradient(256, 150, 8, 256, 150, 300);
+    rg.addColorStop(0, 'rgba(255,255,255,0.92)');
+    rg.addColorStop(0.4, 'rgba(205,238,255,0.34)');
+    rg.addColorStop(1, 'rgba(140,200,255,0)');
     g.fillStyle = rg;
     g.fillRect(0, 0, 512, 320);
     const t = new THREE.CanvasTexture(c);
@@ -59,7 +67,9 @@ function makeScreenTexture() {
     return t;
 }
 
-const CHASSIS = { color: '#1b1c20', metalness: 0.9, roughness: 0.42, envMapIntensity: 0.75 };
+// anodised-aluminium chassis vs. matte-plastic keycaps
+const CHASSIS = { color: '#1b1c20', metalness: 0.85, roughness: 0.3, envMapIntensity: 1.2 };
+const KEYCAP = { color: '#0c0c0e', metalness: 0.1, roughness: 0.85, envMapIntensity: 0.6 };
 
 function Keyboard() {
     const keys = useMemo(() => {
@@ -81,7 +91,7 @@ function Keyboard() {
     return (
         <Instances range={keys.length} position={[0, 0.066, 0.06]} castShadow>
             <boxGeometry args={[0.14, 0.03, 0.14]} />
-            <meshStandardMaterial color="#0c0c0e" metalness={0.5} roughness={0.65} envMapIntensity={0.4} />
+            <meshStandardMaterial {...KEYCAP} />
             {keys.map((k, i) => (
                 <Instance key={i} position={[k[0], 0, k[1]]} />
             ))}
@@ -94,9 +104,13 @@ function Laptop({ progress, screenRef, diveTargetRef }) {
     const lidPivot = useRef();
     const screenMat = useRef();
     const screenLight = useRef();
+    const rectLight = useRef();
     const tex = useMemo(makeScreenTexture, []);
 
     useFrame((state) => {
+        if (!root.current || !lidPivot.current || !screenMat.current || !rectLight.current || !screenLight.current) {
+            return;
+        }
         const p = progress.current;
         const t = state.clock.elapsedTime;
 
@@ -112,15 +126,15 @@ function Laptop({ progress, screenRef, diveTargetRef }) {
         const open = easeInOutExpo(remap(p, 0.04, 0.46));
         lidPivot.current.rotation.x = lerp(0, -Math.PI / 2, open);
 
-        // screen: a DIM cool glow while the lid opens, fully extinguished by
-        // p≈0.58 — long before the diving camera gets close enough for the
-        // screen to dominate the frame. Diffuse is a static #0D0D0D, so the
-        // screen is always the page-background colour: no flash, ever.
-        const glow = remap(p, 0.13, 0.38);
-        const kill = easeInOutCubic(remap(p, 0.4, 0.58));
-        const lit = glow * (1 - kill);
-        screenMat.current.emissiveIntensity = lit * 0.5;
-        screenLight.current.intensity = lit * 2.2;
+        // screen powers on BRIGHT as the lid opens, then a second surge as the
+        // camera dives in so it fills the viewport as a glowing monitor. It
+        // never dims here — the identity panel boots straight onto the lit
+        // screen; LaptopDive settles it to #0D0D0D only over the last sliver.
+        const powerOn = easeOutCubic(remap(p, 0.1, 0.4));
+        const surge = easeInOutCubic(remap(p, 0.42, 0.8));
+        screenMat.current.emissiveIntensity = powerOn * 1.5 + surge * 1.9;
+        rectLight.current.intensity = powerOn * 3.2 + surge * 1.6;
+        screenLight.current.intensity = powerOn * 3 + surge * 2.2;
     });
 
     return (
@@ -164,23 +178,35 @@ function Laptop({ progress, screenRef, diveTargetRef }) {
                         <planeGeometry args={[2.96, 1.86]} />
                         <meshStandardMaterial color="#050506" metalness={0.2} roughness={0.5} />
                     </mesh>
-                    {/* the screen — diffuse locked to the page background (#0D0D0D);
-                        only the emissive (driven in useFrame) ever lights it, and
-                        only dimly, only while the lid is opening. */}
+                    {/* the screen — MeshStandardMaterial lit by a bright
+                        blue/cyan emissiveMap; toneMapped off so it stays vivid
+                        and blows toward white as the camera closes in. */}
                     <mesh position={[0, 1.0, 0.03]}>
                         <planeGeometry args={[2.82, 1.72]} />
                         <meshStandardMaterial
                             ref={screenMat}
                             map={tex}
-                            color="#0D0D0D"
-                            emissive="#4a63ad"
+                            color="#0a1530"
+                            emissive="#cfe8ff"
                             emissiveMap={tex}
                             emissiveIntensity={0}
                             metalness={0}
-                            roughness={0.5}
+                            roughness={0.4}
                             toneMapped={false}
                         />
                     </mesh>
+                    {/* rectangular backlight pool — sized to the panel, tilted so
+                        its beam sweeps the keyboard as the lid hinges up. Grouped
+                        with the lid, so it moves with the screen. */}
+                    <rectAreaLight
+                        ref={rectLight}
+                        position={[0, 1.0, 0.09]}
+                        rotation={[-Math.PI / 2 - 0.35, 0, 0]}
+                        width={2.82}
+                        height={1.72}
+                        color="#bcd2ff"
+                        intensity={0}
+                    />
                     {/* camera notch */}
                     <mesh position={[0, 1.9, 0.031]}>
                         <circleGeometry args={[0.014, 16]} />
@@ -228,8 +254,8 @@ function CameraRig({ progress, screenRef, diveTargetRef }) {
 
         const p = progress.current;
         // dive shares the hinge's timeline (starts while the lid is still
-        // arcing back) and eases in/out to match the mechanical motion.
-        const dive = easeInOutCubic(remap(p, 0.18, 0.82));
+        // arcing back) and lands just before the panel boots (DIVE_END 0.8).
+        const dive = easeInOutCubic(remap(p, 0.16, 0.78));
 
         // BOTH poses take their Y from the fixed screen centre (`tgt`), never
         // from the live anchor — so the camera path stays level with the screen
@@ -254,15 +280,16 @@ function DiveBloom({ progress }) {
     const bloom = useRef();
     useFrame(() => {
         if (!bloom.current) return;
-        // faint bloom only while the screen glows; matched to the same kill
-        // window as the screen emissive so nothing blooms once the camera closes in
+        // bloom climbs with the screen: a lit-monitor glow that swells as the
+        // camera dives in, so the panel fills the viewport actually glowing.
         const p = progress.current;
-        const lit = remap(p, 0.13, 0.38) * (1 - easeInOutCubic(remap(p, 0.4, 0.58)));
-        bloom.current.intensity = 0.06 + lit * 0.4;
+        const on = easeOutCubic(remap(p, 0.1, 0.4));
+        const surge = easeInOutCubic(remap(p, 0.42, 0.82));
+        bloom.current.intensity = 0.05 + on * 0.5 + surge * 0.55;
     });
     return (
         <EffectComposer disableNormalPass>
-            <Bloom ref={bloom} mipmapBlur luminanceThreshold={0.85} luminanceSmoothing={0.2} intensity={0.06} />
+            <Bloom ref={bloom} mipmapBlur luminanceThreshold={0.72} luminanceSmoothing={0.25} intensity={0.05} />
         </EffectComposer>
     );
 }
@@ -281,22 +308,26 @@ const LaptopScene = ({ progress }) => {
             <color attach="background" args={['#0D0D0D']} />
             <fog attach="fog" args={['#0D0D0D', 7, 18]} />
 
-            {/* baked studio reflections so the aluminium chassis reads as metal */}
-            <Environment resolution={128} frames={1}>
-                <Lightformer form="rect" intensity={2.2} position={[0, 4, 3]} scale={[7, 2.5, 1]} color="#ffffff" />
-                <Lightformer form="rect" intensity={1.1} position={[-4, 1.5, 4]} scale={[3, 4, 1]} rotation-y={Math.PI / 4} color="#8fb4ff" />
-                <Lightformer form="rect" intensity={0.7} position={[4, 0.5, 4]} scale={[3, 4, 1]} rotation-y={-Math.PI / 4} color="#ffffff" />
-                <Lightformer form="ring" intensity={0.4} position={[0, -2, 2]} scale={5} color="#20242c" />
+            {/* studio soft-box rig baked once into an env map — gives the
+                aluminium bevels realistic glints and gradients without lifting
+                the pitch-black background. Swap for a real HDR any time with
+                <Environment preset="studio" environmentIntensity={0.25} />. */}
+            <Environment resolution={256} frames={1}>
+                <Lightformer form="rect" intensity={3.2} position={[0, 5, 1]} scale={[10, 4, 1]} rotation-x={Math.PI / 2} color="#ffffff" />
+                <Lightformer form="rect" intensity={2.1} position={[-5, 1, 3]} scale={[4, 7, 1]} rotation-y={Math.PI / 3} color="#c7d8ff" />
+                <Lightformer form="rect" intensity={1.5} position={[5, 1.5, 2]} scale={[4, 7, 1]} rotation-y={-Math.PI / 3} color="#ffffff" />
+                <Lightformer form="rect" intensity={1.3} position={[0, 1, -6]} scale={[9, 5, 1]} color="#7186c6" />
+                <Lightformer form="ring" intensity={0.5} position={[0, -3, 3]} scale={7} color="#181b22" />
             </Environment>
 
-            <ambientLight intensity={0.12} />
+            <ambientLight intensity={0.1} />
             {/* cinematic spotlight directly overhead — soft feathered edge for
                 the isolating vignette, and it casts a real shadow onto the floor */}
             <spotLight
                 position={[0, 8, 0.6]}
                 angle={0.55}
                 penumbra={0.85}
-                intensity={175}
+                intensity={145}
                 distance={32}
                 decay={1.5}
                 color="#eef2ff"
@@ -316,7 +347,7 @@ const LaptopScene = ({ progress }) => {
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.821, 0]} receiveShadow>
                 <planeGeometry args={[60, 60]} />
                 <MeshReflectorMaterial
-                    resolution={512}
+                    resolution={256}
                     mixBlur={1}
                     mixStrength={0.18}
                     blur={[420, 140]}

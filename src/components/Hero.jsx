@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import NowPlaying from './NowPlaying/NowPlaying';
 
 const INITIAL = 'VINEETH';
 const FINAL = 'PORTFOLIO';
@@ -9,7 +10,7 @@ const T_HOLD = 0.6;       // "VINEETH" stays before the crossfade
 const T_TEXT_FADE = 0.9;  // "VINEETH" fades out while "PORTFOLIO" fades in
 const T_SLIDE_START = 1.6;
 const T_SLIDE_DUR = 2.4;  // slow, soft rise -> portrait settled at ~4.0s
-const T_UI = 4.1;         // navbar + subtitle + button
+const T_UI = 3.0;         // navbar + subtitle + button + now-playing (comes in while the portrait finishes its settle)
 
 /**
  * Cinematic hero with a strictly-sequenced reveal:
@@ -109,6 +110,17 @@ const Hero = () => {
                 >
                     Get in Touch <span aria-hidden>&rarr;</span>
                 </motion.a>
+            </motion.div>
+
+            {/* Live "Now Playing" widget — bottom-left corner, tilts on hover,
+                fades in just after the UI. Larger screens only (tilt + space). */}
+            <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: T_UI + 0.35, duration: 0.6, ease: 'easeOut' }}
+                className="absolute bottom-10 left-6 z-40 hidden lg:block"
+            >
+                <NowPlaying />
             </motion.div>
         </section>
     );

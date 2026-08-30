@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FaLinkedin, FaGithub, FaInstagram, FaDownload } from 'react-icons/fa';
-import LanyardBadge from './LanyardBadge';
+import LanyardCard from './Lanyard/LanyardCard';
 
 const METRICS = [
     { value: '6+', label: 'Projects Shipped' },
@@ -112,9 +112,9 @@ const About = () => {
                             </div>
                         </motion.div>
 
-                        {/* RIGHT COLUMN: physics ID badge */}
+                        {/* RIGHT COLUMN: 3D physics ID badge on a lanyard */}
                         <div className="h-[520px] md:h-[600px] w-full">
-                            <LanyardBadge photo="/assets/CLG-IMAGE.jpg" />
+                            <LanyardCard photo="/assets/CLG-IMAGE.jpg" />
                         </div>
                     </div>
                 </div>
