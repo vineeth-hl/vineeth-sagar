@@ -3,14 +3,14 @@ import { FaGithub, FaLinkedin, FaInstagram, FaEnvelope } from 'react-icons/fa';
 
 const Footer = () => {
     return (
-        <footer className="bg-black py-8 px-6 md:px-12 border-t border-white/10">
+        <footer className="bg-background py-8 px-6 md:px-12 border-t border-line">
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                 {/* Left Side: Name & Copyright */}
                 <div className="text-center md:text-left">
-                    <h2 className="text-2xl font-bold mb-2">
-                        <span className="text-pink-500">Vineeth</span> <span className="text-white">Sagar H L</span>
+                    <h2 className="text-xl font-bold mb-1">
+                        <span className="text-accent-gold">Vineeth</span> <span className="text-primary">Sagar H L</span>
                     </h2>
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-secondary text-sm">
                         © {new Date().getFullYear()} Vineeth Sagar H L. All rights reserved.
                     </p>
                 </div>
@@ -32,7 +32,7 @@ const SocialLink = ({ href, icon }) => (
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-gray-400 hover:text-white text-xl transition-colors duration-300"
+        className="text-secondary hover:text-accent-blue text-lg transition-colors duration-200"
     >
         {icon}
     </a>

@@ -67,16 +67,7 @@ const Skills = () => {
     const [activeTab, setActiveTab] = useState('languages');
 
     return (
-        <section id="skills" className="relative py-32 px-6 md:px-12 min-h-screen bg-black overflow-hidden">
-            {/* Background Elements */}
-            <motion.div
-                animate={{ backgroundPosition: ["0rem 0rem", "4rem 4rem"] }}
-                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"
-            />
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-black via-transparent to-black z-0 pointer-events-none" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent-purple/30 blur-[120px] rounded-full z-0" />
-
+        <section id="skills" className="relative py-28 px-6 md:px-12 bg-background overflow-hidden border-t border-line">
             <div className="relative z-10 max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-16">
@@ -84,35 +75,34 @@ const Skills = () => {
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="text-4xl md:text-5xl font-black text-center mb-4 tracking-tight bg-gradient-to-r from-white via-accent-purple to-purple-500 bg-clip-text text-transparent"
+                        className="text-4xl md:text-5xl font-extrabold text-center mb-4 text-accent-gold"
                     >
-                        TECH ARSENAL
+                        Tech Arsenal
                     </motion.h2>
                     <motion.div
                         initial={{ scaleX: 0 }}
                         whileInView={{ scaleX: 1 }}
                         viewport={{ once: true }}
-                        transition={{ delay: 0.2, duration: 0.8 }}
-                        className="h-1.5 w-24 bg-gradient-to-r from-accent-purple to-purple-500 mx-auto rounded-full"
+                        transition={{ delay: 0.15, duration: 0.6 }}
+                        className="h-0.5 w-16 bg-accent-blue mx-auto rounded-full"
                     />
                 </div>
 
                 {/* Tab Navigation */}
                 <div className="flex justify-center gap-4 mb-16">
-                    <div className="flex flex-wrap justify-center gap-2 p-1 bg-white/5 backdrop-blur-lg rounded-full border border-white/10 relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 opacity-50" />
+                    <div className="flex flex-wrap justify-center gap-1 p-1 bg-card rounded-md border border-line">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`relative px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 ${activeTab === tab.id ? 'text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]' : 'text-gray-400 hover:text-white hover:bg-white/10'
+                                className={`relative px-6 py-2 rounded text-sm font-semibold transition-colors duration-200 ${activeTab === tab.id ? 'text-white' : 'text-secondary hover:text-primary'
                                     }`}
                             >
                                 {activeTab === tab.id && (
                                     <motion.div
                                         layoutId="activeTab"
-                                        className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 rounded-full"
-                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                        className="absolute inset-0 bg-accent-blue rounded"
+                                        transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                                     />
                                 )}
                                 <span className="relative z-10">{tab.label}</span>
@@ -155,7 +145,7 @@ const ToolsView = ({ tools }) => (
         {tools.map((category, idx) => (
             category.items && category.items.length > 0 && (
                 <div key={idx}>
-                    <h3 className="text-xl font-bold mb-6 pl-4 border-l-4 border-transparent bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent inline-block">
+                    <h3 className="text-lg font-bold mb-6 pl-3 border-l-2 border-accent-blue text-primary inline-block">
                         {category.category}
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -193,26 +183,25 @@ const SpotlightCard = ({ item }) => {
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-6 h-full flex flex-col items-center justify-center gap-4 group min-h-[140px] hover:border-[var(--card-color)] transition-colors duration-500"
+            className="relative overflow-hidden rounded-lg border border-line bg-card p-6 h-full flex flex-col items-center justify-center gap-4 group min-h-[140px] hover:border-[var(--card-color)] transition-colors duration-300"
             style={{ '--card-color': item.color }}
         >
             <div
                 className="pointer-events-none absolute -inset-px transition duration-300"
                 style={{
                     opacity,
-                    background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(255,255,255,0.1), transparent 40%)`
+                    background: `radial-gradient(500px circle at ${position.x}px ${position.y}px, rgb(var(--accent) / 0.10), transparent 40%)`
                 }}
             />
 
             <div
-                className="relative z-10 text-4xl text-gray-500 transition-all duration-300 group-hover:text-[var(--hover-color)] group-hover:drop-shadow-[0_0_20px_var(--hover-color)]"
+                className="relative z-10 text-4xl text-secondary transition-colors duration-300 group-hover:text-[var(--hover-color)]"
                 style={{ '--hover-color': item.color }}
             >
                 {item.icon}
             </div>
             <h3
-                className="relative z-10 text-lg font-bold tracking-wide text-gray-400 group-hover:text-[var(--text-color)] transition-colors duration-300 text-center"
-                style={{ '--text-color': item.color }}
+                className="relative z-10 text-base font-semibold tracking-wide text-secondary group-hover:text-primary transition-colors duration-300 text-center"
             >
                 {item.name}
             </h3>

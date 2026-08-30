@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+    darkMode: 'class',
     content: [
         "./index.html",
         "./src/**/*.{js,ts,jsx,tsx}",
@@ -7,22 +8,24 @@ export default {
     theme: {
         extend: {
             colors: {
-                background: '#0D0D0D',
-                card: '#1A1A1A',
-                primary: '#FFFFFF',
-                secondary: '#AAAAAA',
+                background: 'rgb(var(--bg-main) / <alpha-value>)',
+                card: 'rgb(var(--surface) / <alpha-value>)',
+                line: 'rgb(var(--line) / <alpha-value>)',
+                primary: 'rgb(var(--text-primary) / <alpha-value>)',
+                secondary: 'rgb(var(--text-secondary) / <alpha-value>)',
                 accent: {
-                    purple: '#A855F7',
-                    cyan: '#06B6D4',
-                }
+                    blue: 'rgb(var(--accent) / <alpha-value>)',
+                    gold: 'rgb(var(--accent-gold) / <alpha-value>)',
+                    // legacy aliases -> resolve to the blue accent
+                    purple: 'rgb(var(--accent) / <alpha-value>)',
+                    cyan: 'rgb(var(--accent) / <alpha-value>)',
+                },
             },
             fontFamily: {
-                heading: ['Outfit', 'sans-serif'],
-                mono: ['JetBrains Mono', 'monospace'],
+                sans: ['Inter', 'system-ui', 'sans-serif'],
+                heading: ['Inter', 'system-ui', 'sans-serif'],
+                mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
             },
-            backgroundImage: {
-                'gradient-main': 'linear-gradient(135deg, #A855F7, #06B6D4)',
-            }
         },
     },
     plugins: [],

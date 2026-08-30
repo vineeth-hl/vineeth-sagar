@@ -1,133 +1,115 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform, useSpring, useMotionValue, useMotionTemplate } from 'framer-motion';
-import { FaReact, FaCode, FaLaptopCode, FaRocket } from 'react-icons/fa';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
+const INITIAL = 'VINEETH';
+const FINAL = 'PORTFOLIO';
+
+/* Timeline (seconds) */
+const T_HOLD = 0.6;       // "VINEETH" stays before the crossfade
+const T_TEXT_FADE = 0.9;  // "VINEETH" fades out while "PORTFOLIO" fades in
+const T_SLIDE_START = 1.6;
+const T_SLIDE_DUR = 2.4;  // slow, soft rise -> portrait settled at ~4.0s
+const T_UI = 4.1;         // navbar + subtitle + button
+
+/**
+ * Cinematic hero with a strictly-sequenced reveal:
+ *   1. "VINEETH" holds, then cross-fades into "PORTFOLIO" in the same spot
+ *      (one fades out as the other fades in).
+ *   2. As the word settles, the dead-centre cut-out portrait slides up slowly
+ *      from below the frame (translateY 105% -> 0, opacity 0 -> 1) over ~2.4s
+ *      with a decelerating ease, overlapping the letters for 3D depth.
+ *   3. Only once the portrait has settled do the navbar, subtitle and contact
+ *      button fade in with a slight upward float.
+ *
+ * Stacking: radial glow (z-0) < text (z-10) < portrait (z-20) < UI (z-30).
+ * Hero stays dark regardless of the site theme.
+ */
 const Hero = () => {
-    const containerRef = useRef(null);
+    const [word, setWord] = useState(INITIAL);
 
-    // Scroll Parallax Logic
-    const { scrollYProgress } = useScroll({
-        target: containerRef,
-        offset: ["start start", "end start"]
-    });
-    const yText = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-    const xText = useTransform(scrollYProgress, [0, 1], ["0%", "10%"]);
+    useEffect(() => {
+        const t = setTimeout(() => setWord(FINAL), T_HOLD * 1000);
+        return () => clearTimeout(t);
+    }, []);
 
-    // --- MOUSE TRACKING ---
-    // We track the mouse relative to the container for accurate masking.
-    const mouseX = useMotionValue(0);
-    const mouseY = useMotionValue(0);
-
-    // Smooth springs for the cursor/mask movement
-    const springX = useSpring(mouseX, { stiffness: 120, damping: 20 });
-    const springY = useSpring(mouseY, { stiffness: 120, damping: 20 });
-
-    // Mask Size (Radius of the reveal hole)
-    const maskSize = useSpring(0, { stiffness: 60, damping: 20 });
-
-    const handleMouseMove = (e) => {
-        if (!containerRef.current) return;
-        const rect = containerRef.current.getBoundingClientRect();
-
-        // Update values
-        mouseX.set(e.clientX - rect.left);
-        mouseY.set(e.clientY - rect.top);
-
-        // Ensure mask is open when moving
-        maskSize.set(80);
+    const uiItem = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
     };
-
-    const handleMouseLeave = () => {
-        maskSize.set(0);
-    };
-
-    // --- MASK TEMPLATE ---
-    // radial-gradient(circle [size] at [x] [y], transparent 80%, black 100%)
-    // Transparent = Hole (shows underlying Batman)
-    // Black = Opaque (shows Top Layer / Vineeth)
-    const maskImage = useMotionTemplate`radial-gradient(circle ${maskSize}px at ${springX}px ${springY}px, transparent 80%, black 100%)`;
-
-    // Float Animation Variants
-    const partVariants = (custom) => ({
-        hidden: { x: custom.x, y: custom.y, opacity: 0, scale: 0.5, rotate: custom.rotate },
-        visible: { x: 0, y: 0, opacity: 1, scale: 1, rotate: 0, transition: { duration: 1.5, ease: [0.16, 1, 0.3, 1], delay: 0.2 } }
-    });
 
     return (
-        <section
-            ref={containerRef}
-            className="relative h-screen w-full overflow-hidden bg-black cursor-none"
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-        >
-            {/* ==================== LAYER 2: BOTTOM (Batman) ==================== */}
-            <div className="absolute inset-0 z-0">
-                <img
-                    src="/assets/batman.png"
-                    alt="Batman Background"
-                    className="w-full h-full object-cover opacity-80"
-                />
-                {/* Detail Overlay */}
-                <div className="absolute inset-0 bg-accent-purple/10 mix-blend-overlay" />
-            </div>
-
-
-            {/* ==================== LAYER 1: TOP (Overlay) ==================== */}
-            {/* This layer covers the screen and gets "scratched" away by the mask */}
-            <motion.div
-                className="absolute inset-0 z-10 bg-[#050505] flex flex-col items-center justify-center p-0 m-0"
+        <section className="relative h-screen w-full overflow-hidden bg-[#0D0D0D] tracking-tight">
+            {/* Layer 1 — deep background radial glow */}
+            <div
+                className="absolute inset-0 z-0 pointer-events-none"
                 style={{
-                    maskImage: maskImage,
-                    WebkitMaskImage: maskImage
-                }}
-            >
-                {/* 1. Background Text */}
-                <motion.h1
-                    style={{ y: yText, x: xText }}
-                    className="absolute top-1/3 text-[12vw] leading-none font-black text-white/10 whitespace-nowrap z-0 select-none"
-                >
-                    CREATIVE DEVELOPER
-                </motion.h1>
-
-                {/* 2. Central Portrait Container */}
-                <div className="relative z-10 w-[400px] h-[550px] md:h-[650px] translate-y-[180px]">
-                    {/* Background Glow */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[600px] bg-accent-purple/40 blur-[120px] rounded-full -z-10" />
-
-                    {/* Vineeth Image */}
-                    <div className="absolute inset-0 z-20">
-                        <img
-                            src="/assets/vineeth.png"
-                            alt="Vineeth"
-                            className="absolute inset-0 w-full h-full object-contain object-top select-none"
-                            style={{
-                                maskImage: 'radial-gradient(70% 70% at 50% 30%, black 30%, transparent 100%)',
-                                WebkitMaskImage: 'radial-gradient(70% 70% at 50% 30%, black 30%, transparent 100%)'
-                            }}
-                        />
-                    </div>
-
-                    {/* Floating Parts */}
-                    <motion.div custom={{ x: -200, y: -200, rotate: -45 }} variants={partVariants} initial="hidden" animate="visible" className="absolute -top-10 -left-10 text-accent-purple text-5xl z-10"><FaReact /></motion.div>
-                    <motion.div custom={{ x: 200, y: -100, rotate: 45 }} variants={partVariants} initial="hidden" animate="visible" className="absolute top-20 -right-16 text-accent-cyan text-4xl z-10"><FaCode /></motion.div>
-                    <motion.div custom={{ x: -200, y: 200, rotate: -90 }} variants={partVariants} initial="hidden" animate="visible" className="absolute bottom-32 -left-12 text-white/20 text-6xl z-10"><FaLaptopCode /></motion.div>
-                    <motion.div custom={{ x: 200, y: 200, rotate: 90 }} variants={partVariants} initial="hidden" animate="visible" className="absolute -bottom-5 right-0 text-accent-cyan/50 text-5xl z-30"><FaRocket /></motion.div>
-                </div>
-            </motion.div>
-
-            {/* ==================== CUSTOM CURSOR ==================== */}
-            <motion.div
-                className="absolute pointer-events-none z-50 rounded-full border border-white/50 backdrop-blur-sm"
-                style={{
-                    left: springX,
-                    top: springY,
-                    width: 80,
-                    height: 80,
-                    x: '-50%',
-                    y: '-50%',
-                    opacity: 1
+                    background:
+                        'radial-gradient(circle at 50% 42%, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.02) 32%, transparent 58%)',
                 }}
             />
+
+            {/* Layer 2 — massive metallic word: VINEETH fades + zooms out while
+                PORTFOLIO fades + zooms in, in the exact same spot. Each <h1> fills
+                the layer and centres its own text (via flex, not transform), so
+                framer-motion is free to animate scale. */}
+            <div className="absolute inset-0 z-10">
+                {/* initial={false} -> "VINEETH" is simply present at first; only the
+                    swap to "PORTFOLIO" animates. */}
+                <AnimatePresence initial={false}>
+                    <motion.h1
+                        key={word}
+                        initial={{ opacity: 0, scale: 1.18 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.82 }}
+                        transition={{ duration: T_TEXT_FADE, ease: [0.4, 0, 0.2, 1] }}
+                        className="absolute inset-0 flex items-center justify-center select-none whitespace-nowrap px-4 text-center font-black leading-none tracking-tighter text-[17vw] bg-gradient-to-b from-white via-[#cfcfcf] to-[#585858] bg-clip-text text-transparent"
+                    >
+                        {word}
+                    </motion.h1>
+                </AnimatePresence>
+            </div>
+
+            {/* Layer 3 — foreground portrait: dead-centre, slides up as the word settles.
+                x:'-50%' is set on the motion element itself so framer-motion doesn't
+                drop the horizontal centring when it writes `transform` for the slide. */}
+            <motion.div
+                initial={{ x: '-50%', y: '105%', opacity: 0 }}
+                animate={{ x: '-50%', y: '0%', opacity: 1 }}
+                transition={{ delay: T_SLIDE_START, duration: T_SLIDE_DUR, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute bottom-0 left-1/2 z-20 pointer-events-none"
+            >
+                <img
+                    src="/assets/hero/image_A.png"
+                    alt="Vineeth Sagar H L"
+                    draggable="false"
+                    className="h-[62vh] md:h-[76vh] w-auto max-w-none select-none object-contain object-bottom [mask-image:linear-gradient(to_top,transparent_0%,#000_9%)]"
+                />
+            </motion.div>
+
+            {/* Bottom scrim — grounds the portrait and makes the UI legible */}
+            <div className="absolute inset-x-0 bottom-0 z-20 h-56 bg-gradient-to-t from-[#0D0D0D] via-[#0D0D0D]/85 to-transparent pointer-events-none" />
+
+            {/* Layer 4 — UI: subtitle + contact, in after the portrait settles */}
+            <motion.div
+                initial="hidden"
+                animate="show"
+                variants={{ show: { transition: { delayChildren: T_UI, staggerChildren: 0.16 } } }}
+                className="absolute inset-x-0 bottom-0 z-30 flex flex-col items-center gap-4 pb-9 md:pb-12"
+            >
+                <motion.p
+                    variants={uiItem}
+                    className="text-[11px] md:text-xs font-medium uppercase tracking-[0.4em] text-[#F7F7F7]/90 drop-shadow-[0_2px_16px_rgba(0,0,0,0.95)]"
+                >
+                    AI/ML &amp; Full-Stack Developer
+                </motion.p>
+                <motion.a
+                    variants={uiItem}
+                    href="#contact"
+                    className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-black/40 px-5 py-2.5 text-xs font-semibold uppercase tracking-widest text-[#F7F7F7] backdrop-blur-sm transition-colors hover:border-white/50 drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)]"
+                >
+                    Get in Touch <span aria-hidden>&rarr;</span>
+                </motion.a>
+            </motion.div>
         </section>
     );
 };

@@ -1,18 +1,47 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   Palette — RGB triplets so Tailwind can apply /alpha, and the
+   whole set flips between themes via the `.light` class on <html>.
+   ============================================================ */
+:root,
+html.dark {
+  --bg-main: 13 13 13;          /* #0D0D0D */
+  --surface: 26 26 26;          /* #1A1A1A */
+  --text-primary: 247 247 247;  /* #F7F7F7 */
+  --text-secondary: 176 176 176;/* #B0B0B0 */
+  --line: 44 44 44;             /* #2C2C2C */
+  --accent: 30 144 255;         /* #1E90FF electric blue */
+  --accent-gold: 232 185 35;    /* #E8B923 gold */
+  --heat-empty: #242424;
+  color-scheme: dark;
+}
+
+html.light {
+  --bg-main: 255 255 255;       /* #FFFFFF */
+  --surface: 245 246 248;       /* #F5F6F8 */
+  --text-primary: 17 17 17;     /* #111111 */
+  --text-secondary: 90 90 90;   /* #5A5A5A */
+  --line: 224 226 230;          /* #E0E2E6 */
+  --accent: 20 110 220;         /* #146EDC deeper blue for contrast */
+  --accent-gold: 166 120 22;    /* #A67816 readable gold on light */
+  --heat-empty: #e9eaed;
+  color-scheme: light;
+}
+
 @layer base {
   body {
-    @apply bg-background text-primary font-heading overflow-x-hidden antialiased;
+    @apply bg-background text-primary font-sans overflow-x-hidden antialiased;
   }
 
   h1,
   h2,
   h3 {
-    @apply font-bold uppercase;
+    @apply font-bold uppercase tracking-tight;
   }
 }
 
