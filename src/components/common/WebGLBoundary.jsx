@@ -1,37 +1,18 @@
 import React from 'react';
 
 /**
- * True if this browser can create a WebGL context. Cached after the first call.
- * A decorative 3D component should skip mounting entirely when this is false.
+ * Cheap feature-detect: is WebGL even a thing in this browser? This does NOT
+ * create a probe context (which could interfere with the real R3F <Canvas> or
+ * hit a context limit) — it only checks the API exists. The real "can it
+ * actually render" question is answered by letting the <Canvas> mount and
+ * catching failure in <WebGLBoundary>.
+ *
+ * `?nowebgl` in the URL forces the fallback path (manual testing / support).
  */
-let cached;
 export function isWebGLAvailable() {
-    if (cached !== undefined) return cached;
-    if (typeof window !== 'undefined' && /[?&]nowebgl\b/.test(window.location.search)) {
-        cached = false; // manual test override
-        return cached;
-    }
-    if (typeof window === 'undefined' || !window.WebGLRenderingContext) {
-        cached = false;
-        return cached;
-    }
-    try {
-        const canvas = document.createElement('canvas');
-        const gl =
-            canvas.getContext('webgl2') ||
-            canvas.getContext('webgl') ||
-            canvas.getContext('experimental-webgl');
-        if (gl) {
-            // don't hold the probe context against the browser's context limit
-            gl.getExtension('WEBGL_lose_context')?.loseContext();
-            cached = true;
-        } else {
-            cached = false;
-        }
-    } catch (e) {
-        cached = false;
-    }
-    return cached;
+    if (typeof window === 'undefined') return false;
+    if (/[?&]nowebgl\b/.test(window.location.search)) return false;
+    return !!(window.WebGLRenderingContext || window.WebGL2RenderingContext);
 }
 
 /**
