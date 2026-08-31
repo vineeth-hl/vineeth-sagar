@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { FaGithub } from 'react-icons/fa';
 import { HiArrowTopRightOnSquare } from 'react-icons/hi2';
+import SectionFX from './common/SectionFX';
 
 const projects = [
     {
@@ -38,7 +39,9 @@ const projects = [
 
 const FeaturedProjects = () => {
     return (
-        <section id="projects" className="py-24 px-6 md:px-12 bg-background relative border-t border-line">
+        <section id="projects" className="py-24 px-6 md:px-12 bg-background relative overflow-hidden border-t border-line">
+            <SectionFX variant="aurora" />
+
             <div className="max-w-7xl mx-auto relative z-10">
                 {/* Header */}
                 <div className="text-center mb-16">

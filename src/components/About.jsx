@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { FaLinkedin, FaGithub, FaInstagram, FaDownload } from 'react-icons/fa';
 import LanyardCard from './Lanyard/LanyardCard';
+import SectionFX from './common/SectionFX';
 
 const METRICS = [
     { value: '6+', label: 'Projects Shipped' },
@@ -12,6 +13,8 @@ const METRICS = [
 const About = () => {
     return (
         <section id="about" className="relative py-24 bg-background overflow-hidden">
+            <SectionFX variant="grid" />
+
             {/* carries the dark laptop-dive straight into About (fade, not a hard cut);
                 in dark mode this is invisible, in light mode it eases the handoff */}
             <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[70vh] bg-gradient-to-b from-[#0D0D0D] to-transparent" />

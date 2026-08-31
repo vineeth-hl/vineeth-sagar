@@ -4,6 +4,7 @@ import {
     FaReact, FaJs, FaHtml5, FaCss3Alt, FaJava, FaPython,
     FaGithub, FaDocker, FaDatabase, FaGitAlt, FaFilm, FaCameraRetro, FaCode
 } from 'react-icons/fa';
+import SectionFX from './common/SectionFX';
 import {
     SiTensorflow, SiPytorch, SiScikitlearn, SiNumpy, SiPandas,
     SiNextdotjs
@@ -68,6 +69,8 @@ const Skills = () => {
 
     return (
         <section id="skills" className="relative py-28 px-6 md:px-12 bg-background overflow-hidden border-t border-line">
+            <SectionFX variant="orbs" />
+
             <div className="relative z-10 max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-16">
