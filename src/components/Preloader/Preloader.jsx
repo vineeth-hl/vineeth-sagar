@@ -134,36 +134,36 @@ export default function Preloader({ onComplete }) {
                     />
                 </motion.svg>
 
-                {/* Name — one element, uniform outline via -webkit-text-stroke.
-                    clip-path wipes it on L->R, then colour fills transparent -> white. */}
-                <motion.p
-                    aria-label={NAME}
-                    className="select-none whitespace-nowrap text-center font-extrabold uppercase leading-none"
-                    style={{
-                        fontFamily: '"Inter", system-ui, sans-serif',
-                        fontSize: 'clamp(1.3rem, 4.6vw, 2.5rem)',
-                        letterSpacing: '0.16em',
-                        WebkitTextStroke: '1px #F7F7F7',
-                        textStroke: '1px #F7F7F7',
-                        color: 'rgba(247,247,247,0)'
-                    }}
-                    initial={
-                        reduced
-                            ? { color: 'rgba(247,247,247,1)', clipPath: 'inset(0% 0% 0% 0%)' }
-                            : { clipPath: 'inset(0% 100% 0% 0%)', color: 'rgba(247,247,247,0)' }
-                    }
-                    animate={{ clipPath: 'inset(0% 0% 0% 0%)', color: 'rgba(247,247,247,1)' }}
-                    transition={D({
-                        clipPath: { duration: 1.7, ease: [0.4, 0, 0.2, 1], delay: 0.85 },
-                        color: { duration: 0.75, ease: 'easeOut', delay: 2.5 }
-                    })}
-                    onAnimationComplete={() => {
-                        drawDone.current = true;
-                        tryFinish();
-                    }}
-                >
-                    {NAME}
-                </motion.p>
+                {/* Name — solid fill, revealed by a clean L->R clip-path wipe
+                    (no text-stroke: it fringes on curves and reads as doubled).
+                    An accent underline then draws in beneath it. */}
+                <div className="relative flex flex-col items-center gap-3">
+                    <motion.p
+                        aria-label={NAME}
+                        className="select-none whitespace-nowrap text-center font-extrabold uppercase leading-none text-[#F7F7F7]"
+                        style={{
+                            fontFamily: '"Inter", system-ui, sans-serif',
+                            fontSize: 'clamp(1.3rem, 4.6vw, 2.5rem)',
+                            letterSpacing: '0.16em'
+                        }}
+                        initial={{ clipPath: reduced ? 'inset(0% 0% 0% 0%)' : 'inset(0% 100% 0% 0%)' }}
+                        animate={{ clipPath: 'inset(0% 0% 0% 0%)' }}
+                        transition={D({ duration: 1.9, ease: [0.4, 0, 0.2, 1], delay: 0.9 })}
+                    >
+                        {NAME}
+                    </motion.p>
+                    <motion.span
+                        aria-hidden
+                        className="h-[2px] w-full origin-left rounded-full bg-[#1E90FF]"
+                        initial={{ scaleX: reduced ? 1 : 0 }}
+                        animate={{ scaleX: 1 }}
+                        transition={D({ duration: 0.5, ease: [0.4, 0, 0.2, 1], delay: 2.6 })}
+                        onAnimationComplete={() => {
+                            drawDone.current = true;
+                            tryFinish();
+                        }}
+                    />
+                </div>
 
                 <motion.p
                     className="font-mono text-[10px] uppercase tracking-[0.42em] text-white/35 md:text-[11px]"
