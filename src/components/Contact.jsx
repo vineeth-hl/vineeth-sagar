@@ -1,8 +1,59 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaEnvelope, FaLinkedin, FaGithub, FaInstagram, FaPaperPlane, FaPhoneAlt } from 'react-icons/fa';
+import { FaEnvelope, FaLinkedin, FaGithub, FaInstagram, FaPaperPlane, FaPhoneAlt, FaCheck } from 'react-icons/fa';
+
+const TO_EMAIL = 'vineethsagarhl0@gmail.com';
+const WEB3FORMS_KEY = import.meta.env.VITE_WEB3FORMS_KEY || '';
 
 const Contact = () => {
+    const [status, setStatus] = useState('idle'); // idle | sending | sent | error
+    const [errorMsg, setErrorMsg] = useState('');
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const form = e.currentTarget;
+        const data = Object.fromEntries(new FormData(form));
+
+        // No form backend configured -> hand off to the visitor's mail client.
+        if (!WEB3FORMS_KEY) {
+            const body = `Name: ${data.name}\nEmail: ${data.email}\n\n${data.message}`;
+            window.location.href = `mailto:${TO_EMAIL}?subject=${encodeURIComponent(
+                data.subject || 'Portfolio contact'
+            )}&body=${encodeURIComponent(body)}`;
+            return;
+        }
+
+        setStatus('sending');
+        setErrorMsg('');
+        try {
+            const res = await fetch('https://api.web3forms.com/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                body: JSON.stringify({
+                    access_key: WEB3FORMS_KEY,
+                    from_name: data.name,
+                    replyto: data.email,
+                    subject: data.subject || `Portfolio message from ${data.name}`,
+                    email: data.email,
+                    message: data.message
+                })
+            });
+            const json = await res.json();
+            if (json.success) {
+                setStatus('sent');
+                form.reset();
+            } else {
+                setStatus('error');
+                setErrorMsg(json.message || 'Something went wrong. Try email instead.');
+            }
+        } catch {
+            setStatus('error');
+            setErrorMsg('Network error. Try email instead.');
+        }
+    };
+
+    const sending = status === 'sending';
+
     return (
         <section id="contact" className="relative py-28 px-6 md:px-12 bg-background border-t border-line">
             <div className="relative z-10 max-w-7xl mx-auto">
@@ -59,28 +110,59 @@ const Contact = () => {
                         className="bg-card border border-line p-6 md:p-8 rounded-lg h-full flex flex-col"
                     >
                         <h3 className="text-xl font-bold text-primary mb-6">Send a Message</h3>
-                        <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                            <Field label="Your Name">
-                                <input type="text" name="name" className={inputCls} placeholder="Jane Doe" />
-                            </Field>
-                            <Field label="Your Email">
-                                <input type="email" name="email" className={inputCls} placeholder="jane@example.com" />
-                            </Field>
-                            <Field label="Subject">
-                                <input type="text" name="subject" className={inputCls} placeholder="Project discussion" />
-                            </Field>
-                            <Field label="Your Message">
-                                <textarea rows="4" name="message" className={`${inputCls} resize-none`} placeholder="How can I help?" />
-                            </Field>
 
-                            <button
-                                type="submit"
-                                className="w-full py-3 rounded-md bg-accent-blue text-white font-semibold text-sm tracking-wide hover:bg-[#1a7fe0] transition-colors flex items-center justify-center gap-2 group"
-                            >
-                                Send Message
-                                <FaPaperPlane className="text-xs transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                            </button>
-                        </form>
+                        {status === 'sent' ? (
+                            <div className="flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
+                                    <FaCheck />
+                                </div>
+                                <p className="text-primary font-semibold">Message sent</p>
+                                <p className="text-secondary text-sm">Thanks — I&apos;ll get back to you soon.</p>
+                                <button
+                                    type="button"
+                                    onClick={() => setStatus('idle')}
+                                    className="mt-2 text-xs font-medium uppercase tracking-wider text-accent-blue hover:underline"
+                                >
+                                    Send another
+                                </button>
+                            </div>
+                        ) : (
+                            <form className="space-y-4" onSubmit={handleSubmit}>
+                                <Field label="Your Name">
+                                    <input type="text" name="name" required className={inputCls} placeholder="Jane Doe" />
+                                </Field>
+                                <Field label="Your Email">
+                                    <input type="email" name="email" required className={inputCls} placeholder="jane@example.com" />
+                                </Field>
+                                <Field label="Subject">
+                                    <input type="text" name="subject" className={inputCls} placeholder="Project discussion" />
+                                </Field>
+                                <Field label="Your Message">
+                                    <textarea rows="4" name="message" required className={`${inputCls} resize-none`} placeholder="How can I help?" />
+                                </Field>
+
+                                {status === 'error' && (
+                                    <p className="text-sm text-red-400">
+                                        {errorMsg}{' '}
+                                        <a href={`mailto:${TO_EMAIL}`} className="underline">
+                                            email me directly
+                                        </a>
+                                        .
+                                    </p>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    disabled={sending}
+                                    className="w-full py-3 rounded-md bg-accent-blue text-white font-semibold text-sm tracking-wide hover:bg-[#1a7fe0] transition-colors flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
+                                >
+                                    {sending ? 'Sending…' : 'Send Message'}
+                                    {!sending && (
+                                        <FaPaperPlane className="text-xs transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                                    )}
+                                </button>
+                            </form>
+                        )}
                     </motion.div>
                 </div>
             </div>
