@@ -13,7 +13,10 @@ const Lanyard = lazy(() => import('./Lanyard'));
  */
 const LanyardCard = ({ photo }) => {
     const ref = useRef(null);
+    // `inView` latches on and never off — the <Canvas> stays mounted once shown
+    // (remounting a WebGL context on every scroll-past risks "context lost").
     const [inView, setInView] = useState(false);
+    const [onScreen, setOnScreen] = useState(false); // drives frameloop only
     const [reduced, setReduced] = useState(false);
     // Assume WebGL is available for the first (hydration) render so the
     // pre-rendered markup matches; downgrade to the static photo in an effect
@@ -29,9 +32,13 @@ const LanyardCard = ({ photo }) => {
     useEffect(() => {
         const el = ref.current;
         if (!el) return undefined;
-        const io = new IntersectionObserver(([e]) => e.isIntersecting && setInView(true), {
-            rootMargin: '200px 0px'
-        });
+        const io = new IntersectionObserver(
+            ([e]) => {
+                if (e.isIntersecting) setInView(true);
+                setOnScreen(e.isIntersecting);
+            },
+            { rootMargin: '200px 0px' }
+        );
         io.observe(el);
         return () => io.disconnect();
     }, []);
@@ -60,7 +67,13 @@ const LanyardCard = ({ photo }) => {
                     fallback={<div className="flex h-full w-full items-center justify-center">{staticPhoto}</div>}
                 >
                     <Suspense fallback={<div className="h-full w-full" />}>
-                        <Lanyard photo={photo} org="BMSIT&M" lanyardColor="#2f6bff" />
+                        <Lanyard
+                            photo={photo}
+                            org="BMSIT&M"
+                            lanyardColor="#2f6bff"
+                            active={onScreen}
+                            onContextLost={() => setNoWebGL(true)}
+                        />
                     </Suspense>
                 </WebGLBoundary>
             )}

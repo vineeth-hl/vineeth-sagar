@@ -124,7 +124,15 @@ function drawCardFace(ctx, W, H, { photoImg, org }) {
   ctx.stroke();
 }
 
-export default function Lanyard({ photo, org = null, lanyardColor = '#7c3aed', fov = 20, transparent = true }) {
+export default function Lanyard({
+  photo,
+  org = null,
+  lanyardColor = '#7c3aed',
+  fov = 20,
+  transparent = true,
+  active = true,
+  onContextLost
+}) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   useEffect(() => {
     const on = () => setIsMobile(window.innerWidth < 768);
@@ -135,10 +143,21 @@ export default function Lanyard({ photo, org = null, lanyardColor = '#7c3aed', f
   return (
     <div className="lanyard-wrapper">
       <Canvas
+        frameloop={active ? 'always' : 'never'}
         dpr={[1, isMobile ? 1.5 : 2]}
         camera={{ position: [0, -0.5, 12], fov }}
         gl={{ alpha: transparent, antialias: true }}
-        onCreated={({ gl }) => gl.setClearColor(new THREE.Color(0x000000), transparent ? 0 : 1)}
+        onCreated={({ gl }) => {
+          gl.setClearColor(new THREE.Color(0x000000), transparent ? 0 : 1);
+          gl.domElement.addEventListener(
+            'webglcontextlost',
+            (e) => {
+              e.preventDefault();
+              onContextLost?.();
+            },
+            { once: true }
+          );
+        }}
       >
         <CameraFit fov={fov} lookY={-0.5} />
         <ambientLight intensity={Math.PI} />
