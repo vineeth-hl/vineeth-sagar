@@ -10,12 +10,14 @@ const slugOf = (path) => path.split('/').pop().replace(/\.mdx$/, '');
 // Normalise download links: prefer a `downloads: [{ label, url }]` list in
 // frontmatter; fall back to a single `reportUrl`.
 function downloadsOf(fm) {
+    // encodeURI keeps "/" but turns spaces etc. into a valid href
+    const enc = (u) => (/%[0-9a-f]{2}/i.test(u) ? u : encodeURI(u));
     if (Array.isArray(fm.downloads)) {
         return fm.downloads
             .filter((d) => d && d.url)
-            .map((d) => ({ label: d.label || 'Download', url: d.url }));
+            .map((d) => ({ label: d.label || 'Download', url: enc(d.url) }));
     }
-    if (fm.reportUrl) return [{ label: 'Project Report', url: fm.reportUrl }];
+    if (fm.reportUrl) return [{ label: 'Project Report', url: enc(fm.reportUrl) }];
     return [];
 }
 

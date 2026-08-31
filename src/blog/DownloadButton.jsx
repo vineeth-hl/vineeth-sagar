@@ -14,7 +14,13 @@ export default function DownloadButton({ downloads = [] }) {
     const items = downloads.filter((d) => d && d.url);
     if (items.length === 0) return null;
 
-    const fileNameOf = (url) => url.split('/').pop() || 'download.pdf';
+    const fileNameOf = (url) => {
+        try {
+            return decodeURIComponent(url.split('/').pop() || '') || 'download.pdf';
+        } catch {
+            return url.split('/').pop() || 'download.pdf';
+        }
+    };
 
     return (
         <>
