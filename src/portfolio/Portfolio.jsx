@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Lenis from '@studio-freight/lenis';
 import Preloader from '../components/Preloader/Preloader';
+import usePreloaderReady from '../hooks/usePreloaderReady';
 import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
 import LaptopDive from '../components/LaptopDive';
@@ -16,6 +17,9 @@ import Footer from '../components/Footer';
 
 const Portfolio = () => {
     const [loaded, setLoaded] = useState(false);
+    const lenisRef = useRef(null);
+    // true once the intro preloader has lifted (or immediately if there isn't one)
+    const ready = usePreloaderReady();
 
     useEffect(() => {
         const lenis = new Lenis({
@@ -28,17 +32,43 @@ const Portfolio = () => {
             smoothTouch: false,
             touchMultiplier: 2
         });
+        lenisRef.current = lenis;
+        // hold scroll while the preloader covers the page — Lenis drives scroll
+        // programmatically from wheel/touch events, so `overflow: hidden` alone
+        // doesn't stop it; without this the page scrolls behind the overlay and
+        // the reveal lands mid-page instead of on the hero.
+        lenis.stop();
 
         if (import.meta.env.DEV) window.__lenis = lenis;
 
+        let rafId;
         function raf(time) {
             lenis.raf(time);
-            requestAnimationFrame(raf);
+            rafId = requestAnimationFrame(raf);
         }
-        requestAnimationFrame(raf);
+        rafId = requestAnimationFrame(raf);
 
-        return () => lenis.destroy();
+        return () => {
+            cancelAnimationFrame(rafId);
+            lenis.destroy();
+            lenisRef.current = null;
+        };
     }, []);
+
+    // release the scroll lock once the preloader is gone, always from the top
+    useEffect(() => {
+        if (!ready) return;
+        const lenis = lenisRef.current;
+        try {
+            window.scrollTo(0, 0);
+        } catch {
+            /* ignore */
+        }
+        if (lenis) {
+            lenis.scrollTo(0, { immediate: true, force: true });
+            lenis.start();
+        }
+    }, [ready]);
 
     return (
         <div className="min-h-screen">

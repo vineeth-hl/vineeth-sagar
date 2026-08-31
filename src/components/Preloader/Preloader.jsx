@@ -34,6 +34,13 @@ export default function Preloader({ onComplete }) {
     const finish = () => {
         if (done.current) return;
         done.current = true;
+        // always reveal from the top — the page may have been nudged while the
+        // overlay covered it
+        try {
+            window.scrollTo(0, 0);
+        } catch {
+            /* ignore */
+        }
         window.__preloaderDone = true;
         window.dispatchEvent(new Event('preloader:done'));
         document.documentElement.style.overflow = '';
