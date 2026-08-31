@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FaTrophy, FaUniversity } from 'react-icons/fa';
+import SectionFX from './common/SectionFX';
 
 const achievements = [
     {
@@ -21,7 +22,9 @@ const achievements = [
 
 const Achievements = () => {
     return (
-        <section id="achievements" className="py-24 px-6 md:px-12 bg-background relative border-t border-line">
+        <section id="achievements" className="py-24 px-6 md:px-12 bg-background relative overflow-hidden border-t border-line">
+            <SectionFX variant="dots" />
+
             <div className="max-w-7xl mx-auto relative z-10">
                 {/* Header */}
                 <div className="text-center mb-16">

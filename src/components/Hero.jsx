@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NowPlaying from './NowPlaying/NowPlaying';
+import YouTubeCard from './NowPlaying/YouTubeCard';
 import usePreloaderReady from '../hooks/usePreloaderReady';
 
 const INITIAL = 'VINEETH';
@@ -126,6 +127,16 @@ const Hero = () => {
                 className="absolute bottom-10 left-6 z-40 hidden lg:block"
             >
                 <NowPlaying />
+            </motion.div>
+
+            {/* "Watching on YouTube" widget — mirrors Now Playing on the right */}
+            <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: T_UI + 0.45, duration: 0.6, ease: 'easeOut' }}
+                className="absolute bottom-10 right-6 z-40 hidden lg:block"
+            >
+                <YouTubeCard />
             </motion.div>
             </>
           )}

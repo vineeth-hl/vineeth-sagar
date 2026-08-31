@@ -15,8 +15,10 @@ import { motion } from 'framer-motion';
 const PANEL_EASE = [0.83, 0, 0.17, 1];
 const DRAW_EASE = [0.65, 0, 0.35, 1];
 const MIN_MS = 2800; // floor so the trace is actually seen
-const HOLD_MS = 1000; // sit on the finished frame so the subtitle is readable
+const HOLD_MS = 750; // sit on the finished frame so the subtitle is readable
 const CAP_MS = 8000; // never hang the site
+// target: content fully drawn ~3.25s + HOLD 0.75s ≈ 4.0s on screen, then it
+// slides away (unless `window.load` still hasn't fired — then it waits for it)
 
 const NAME = 'VINEETH SAGAR H L';
 
@@ -74,7 +76,7 @@ export default function Preloader({ onComplete }) {
             className="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-10 overflow-hidden bg-[#0D0D0D] px-6"
             initial={{ y: 0 }}
             exit={{ y: '-101%' }}
-            transition={{ duration: reduced ? 0.4 : 0.95, ease: PANEL_EASE, delay: reduced ? 0 : 0.16 }}
+            transition={{ duration: reduced ? 0.4 : 0.85, ease: PANEL_EASE, delay: reduced ? 0 : 0.12 }}
         >
             {/* soft accent glow behind the mark */}
             <motion.div
@@ -149,7 +151,7 @@ export default function Preloader({ onComplete }) {
                         }}
                         initial={{ clipPath: reduced ? 'inset(0% 0% 0% 0%)' : 'inset(0% 100% 0% 0%)' }}
                         animate={{ clipPath: 'inset(0% 0% 0% 0%)' }}
-                        transition={D({ duration: 1.6, ease: [0.4, 0, 0.2, 1], delay: 0.85 })}
+                        transition={D({ duration: 1.45, ease: [0.4, 0, 0.2, 1], delay: 0.78 })}
                     >
                         {NAME}
                     </motion.p>
@@ -158,7 +160,7 @@ export default function Preloader({ onComplete }) {
                         className="h-[2px] w-full origin-left rounded-full bg-[#1E90FF]"
                         initial={{ scaleX: reduced ? 1 : 0 }}
                         animate={{ scaleX: 1 }}
-                        transition={D({ duration: 0.5, ease: [0.4, 0, 0.2, 1], delay: 2.4 })}
+                        transition={D({ duration: 0.5, ease: [0.4, 0, 0.2, 1], delay: 2.15 })}
                     />
                 </div>
 
@@ -166,7 +168,7 @@ export default function Preloader({ onComplete }) {
                     className="font-mono text-[10px] uppercase tracking-[0.42em] text-white/50 md:text-[11px]"
                     initial={{ opacity: reduced ? 1 : 0, y: reduced ? 0 : 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={D({ duration: 0.6, ease: 'easeOut', delay: 2.85 })}
+                    transition={D({ duration: 0.55, ease: 'easeOut', delay: 2.65 })}
                     onAnimationComplete={() => {
                         // sit on the fully-drawn frame long enough to read the line
                         setTimeout(() => {
@@ -185,7 +187,7 @@ export default function Preloader({ onComplete }) {
                     className="h-full origin-left bg-[#1E90FF]"
                     initial={{ scaleX: reduced ? 1 : 0 }}
                     animate={{ scaleX: 1 }}
-                    transition={D({ duration: 4.0, ease: [0.4, 0, 0.2, 1] })}
+                    transition={D({ duration: 3.9, ease: [0.4, 0, 0.2, 1] })}
                 />
             </div>
         </motion.div>

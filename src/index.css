@@ -154,3 +154,24 @@ html.lenis body {
 .hljs-addition { color: #98c379; }
 .hljs-emphasis { font-style: italic; }
 .hljs-strong { font-weight: 700; }
+
+/* ---------- Section background FX (SectionFX.jsx) ---------- */
+@keyframes fx-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-58px, -58px, 0); }
+}
+@keyframes fx-float-a {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(42px, -34px, 0); }
+}
+@keyframes fx-float-b {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(-48px, 30px, 0); }
+}
+@keyframes fx-spin-slow {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-anim { animation: none !important; }
+}
