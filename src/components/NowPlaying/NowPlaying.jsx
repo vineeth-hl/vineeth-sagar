@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import TiltedCard from './TiltedCard';
+import { saveLast, loadLast } from './lastMedia';
 
 /**
  * Live "Now Playing" widget for the hero — a wide card: album art on the left,
@@ -46,6 +47,7 @@ const SpotifyMark = ({ className = '' }) => (
 
 export default function NowPlaying({ className = '' }) {
   const [track, setTrack] = useState(null);
+  const [last, setLast] = useState(() => loadLast('spotify')); // last track seen playing
   const [state, setState] = useState('loading'); // loading | playing | offline
   const [nowMs, setNowMs] = useState(() => Date.now());
   const timer = useRef(null);
@@ -70,15 +72,19 @@ export default function NowPlaying({ className = '' }) {
         if (!alive) return;
         const sp = json?.data?.spotify;
         if (json?.data?.listening_to_spotify && sp) {
-          setTrack({
+          const t = {
             song: sp.song || '',
             artist: (sp.artist || '').replace(/;\s*/g, ', '),
             albumArt: sp.album_art_url || PLACEHOLDER,
             url: sp.track_id ? `https://open.spotify.com/track/${sp.track_id}` : null,
             startMs: sp.timestamps?.start ?? null,
             endMs: sp.timestamps?.end ?? null
-          });
+          };
+          setTrack(t);
           setState('playing');
+          const remembered = { song: t.song, artist: t.artist, albumArt: t.albumArt, url: t.url };
+          setLast(remembered);
+          saveLast('spotify', remembered);
         } else {
           setTrack(null);
           setState('offline');
@@ -113,29 +119,29 @@ export default function NowPlaying({ className = '' }) {
   }, [state]);
 
   const playing = state === 'playing' && !!track;
+  const src = playing ? track : last; // fall back to the last track seen
+  const mode = playing ? 'now' : src ? 'last' : 'off';
   const totalMs = playing && track.endMs && track.startMs ? Math.max(0, track.endMs - track.startMs) : 0;
   const elapsedMs = playing && track.startMs ? Math.min(totalMs, Math.max(0, nowMs - track.startMs)) : 0;
   const pct = totalMs ? (elapsedMs / totalMs) * 100 : 0;
-  const caption = playing ? `${track.song} — ${track.artist}` : 'Offline';
+  const caption = src ? `${src.song} — ${src.artist}` : 'Offline';
+  const label =
+    mode === 'now' ? 'Spotify · Now Playing' : mode === 'last' ? 'Spotify · Last Played' : 'Spotify · Offline';
 
   const overlay = (
     <div className="flex h-full w-full items-center gap-3 rounded-[15px] border border-white/10 bg-[#161616] p-2.5">
       <img
-        src={playing ? track.albumArt : PLACEHOLDER}
+        src={src?.albumArt || PLACEHOLDER}
         alt=""
-        className="h-[84px] w-[84px] shrink-0 rounded-md object-cover"
+        className={`h-[84px] w-[84px] shrink-0 rounded-md object-cover ${mode === 'last' ? 'opacity-70' : ''}`}
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <p className="truncate text-[13px] font-bold leading-tight text-white">
-          {playing ? track.song : 'Nothing playing'}
-        </p>
-        <p className="truncate text-[11px] leading-tight text-white/55">{playing ? track.artist : '—'}</p>
+        <p className="truncate text-[13px] font-bold leading-tight text-white">{src?.song || 'Nothing playing'}</p>
+        <p className="truncate text-[11px] leading-tight text-white/55">{src?.artist || '—'}</p>
 
         <div className="mt-1.5 flex items-center gap-1.5">
           <SpotifyMark className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate text-[8.5px] font-semibold uppercase tracking-[0.18em] text-white/45">
-            {playing ? 'Spotify · Now Playing' : 'Spotify · Offline'}
-          </span>
+          <span className="truncate text-[8.5px] font-semibold uppercase tracking-[0.18em] text-white/45">{label}</span>
         </div>
 
         <div className="mt-1 h-[3px] w-full overflow-hidden rounded-full bg-white/10">
@@ -145,8 +151,8 @@ export default function NowPlaying({ className = '' }) {
           />
         </div>
         <div className="mt-0.5 flex justify-between text-[8px] tabular-nums text-white/40">
-          <span>{fmt(elapsedMs)}</span>
-          <span>{playing ? fmt(totalMs) : '0:00'}</span>
+          <span>{playing ? fmt(elapsedMs) : ''}</span>
+          <span>{playing ? fmt(totalMs) : ''}</span>
         </div>
       </div>
     </div>
@@ -172,8 +178,8 @@ export default function NowPlaying({ className = '' }) {
 
   return (
     <div className={className}>
-      {playing && track.url ? (
-        <a href={track.url} target="_blank" rel="noopener noreferrer" aria-label={`Open "${caption}" on Spotify`}>
+      {src?.url ? (
+        <a href={src.url} target="_blank" rel="noopener noreferrer" aria-label={`Open "${caption}" on Spotify`}>
           {card}
         </a>
       ) : (
