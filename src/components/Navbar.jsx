@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCheck, FaDownload, FaBars, FaTimes, FaSun, FaMoon } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import usePreloaderReady from '../hooks/usePreloaderReady';
 
 const getInitialTheme = () => {
@@ -88,6 +89,12 @@ const Navbar = () => {
                                 </a>
                             </li>
                         ))}
+                        <li>
+                            <Link to="/blog" className="hover:text-primary transition-colors relative group">
+                                Writing
+                                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent-blue transition-all group-hover:w-full" />
+                            </Link>
+                        </li>
                     </ul>
 
                     <ThemeToggle />
@@ -150,6 +157,15 @@ const Navbar = () => {
                                     </a>
                                 </li>
                             ))}
+                            <li>
+                                <Link
+                                    to="/blog"
+                                    className="block text-secondary hover:text-primary text-base font-medium py-2"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    Writing
+                                </Link>
+                            </li>
                             <li className="pt-2 border-t border-line">
                                 <a
                                     href="/resume.pdf"
