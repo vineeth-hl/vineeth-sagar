@@ -3,27 +3,32 @@ import TiltedCard from './TiltedCard';
 import { saveLast, loadLast } from './lastMedia';
 
 /**
- * "Watching on YouTube" widget for the hero — mirrors <NowPlaying/> (Spotify),
- * on the opposite corner.
+ * "Watching on YouTube" widget for the hero — mirrors <NowPlaying/> (Spotify)
+ * on the opposite corner. YouTube has no watch-history API, so this resolves
+ * in order:
  *
- * Same data source: the Lanyard API mirrors your Discord presence. A "Watching
- * YouTube" Rich Presence (e.g. the PreMiD browser extension with the YouTube
- * presence enabled) shows up in `data.activities` as `{ name: "YouTube",
- * details: <video title>, state: <channel>, assets, timestamps }`.
- *
- * Needs the same VITE_LANYARD_ID. With no id, or when you're not watching
- * anything, it renders the "Offline" fallback so the layout never shifts.
+ *   1. Currently watching  — a "Watching YouTube" Discord Rich Presence
+ *      (PreMiD browser extension), read live via the Lanyard API + VITE_LANYARD_ID.
+ *   2. Last watched        — the most-recently-added video in a public YouTube
+ *      playlist you curate, via VITE_YOUTUBE_API_KEY + VITE_YOUTUBE_WATCHED_PLAYLIST_ID
+ *      (one playlistItems.list call, 1 quota unit).
+ *   3. Cached              — whatever it last showed (localStorage).
+ *   4. Offline placeholder — nothing configured / available.
  */
 
 const LANYARD_ID = import.meta.env.VITE_LANYARD_ID || '';
-const POLL_MS = 15000;
+const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY || '';
+const WATCHED_PLAYLIST = import.meta.env.VITE_YOUTUBE_WATCHED_PLAYLIST_ID || '';
+
+const PRESENCE_POLL_MS = 15000; // "currently watching" — want it responsive
+const PLAYLIST_POLL_MS = 10 * 60 * 1000; // "last watched" — barely changes
 
 const PLACEHOLDER =
   'data:image/svg+xml;utf8,' +
   encodeURIComponent(
-    "<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'>" +
-      "<rect width='120' height='120' fill='#1d1d1d'/>" +
-      "<path d='M46 40 L86 60 L46 80 Z' fill='#444444'/>" +
+    "<svg xmlns='http://www.w3.org/2000/svg' width='120' height='84'>" +
+      "<rect width='120' height='84' fill='#1d1d1d'/>" +
+      "<path d='M50 30 L78 42 L50 54 Z' fill='#444444'/>" +
       '</svg>'
   );
 
@@ -40,6 +45,21 @@ const fmt = (ms) => {
   return h ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
 };
 
+const timeAgo = (iso) => {
+  if (!iso) return '';
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  const units = [
+    [31536000, 'y'],
+    [2592000, 'mo'],
+    [604800, 'w'],
+    [86400, 'd'],
+    [3600, 'h'],
+    [60, 'm']
+  ];
+  for (const [sec, label] of units) if (s >= sec) return `${Math.floor(s / sec)}${label} ago`;
+  return 'just now';
+};
+
 const YouTubeMark = ({ className = '' }) => (
   <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
     <path
@@ -50,15 +70,12 @@ const YouTubeMark = ({ className = '' }) => (
   </svg>
 );
 
-// Pull { thumb, videoId } out of a Discord/PreMiD YouTube activity. The image
-// key usually embeds the real thumbnail path (…/i.ytimg.com/vi/<id>/…), which
-// gives us both a stable thumbnail and the watch URL.
-function resolveMedia(activity) {
+// pull { thumb, videoId } out of a Discord/PreMiD YouTube activity — the image
+// key usually embeds the real thumbnail path (…/i.ytimg.com/vi/<id>/…)
+function resolvePresenceMedia(activity) {
   const img = activity?.assets?.large_image || activity?.assets?.small_image || '';
-  const vid = img.match(/(?:i\.ytimg\.com|img\.youtube\.com)\/vi\/([\w-]{6,})/i);
-  const videoId = vid ? vid[1] : null;
-  if (videoId) return { thumb: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`, videoId };
-
+  const m = img.match(/(?:i\.ytimg\.com|img\.youtube\.com)\/vi\/([\w-]{6,})/i);
+  if (m) return { thumb: `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`, videoId: m[1] };
   let thumb = null;
   if (img.startsWith('mp:')) thumb = `https://media.discordapp.net/${img.slice(3)}`;
   else if (/^https?:\/\//.test(img)) thumb = img;
@@ -69,12 +86,14 @@ function resolveMedia(activity) {
 }
 
 export default function YouTubeCard({ className = '' }) {
-  const [video, setVideo] = useState(null);
-  const [last, setLast] = useState(() => loadLast('youtube')); // last video seen
-  const [state, setState] = useState(LANYARD_ID ? 'loading' : 'offline'); // loading | watching | offline
+  const [now, setNow] = useState(null); // live "currently watching" (Lanyard)
+  const [fromList, setFromList] = useState(null); // newest in the watched playlist
+  const [cached] = useState(() => loadLast('yt-watch'));
   const [nowMs, setNowMs] = useState(() => Date.now());
-  const timer = useRef(null);
+  const pTimer = useRef(null);
+  const lTimer = useRef(null);
 
+  // 1. currently watching — Discord presence via Lanyard
   useEffect(() => {
     if (!LANYARD_ID) return undefined;
     let alive = true;
@@ -88,7 +107,7 @@ export default function YouTubeCard({ className = '' }) {
         const acts = Array.isArray(json?.data?.activities) ? json.data.activities : [];
         const yt = acts.find((a) => /youtube/i.test(a?.name || '') || /youtube/i.test(a?.assets?.large_text || ''));
         if (yt) {
-          const { thumb, videoId } = resolveMedia(yt);
+          const { thumb, videoId } = resolvePresenceMedia(yt);
           const v = {
             title: yt.details || yt.name || 'YouTube',
             channel: (yt.state || '').replace(/^by\s+/i, '') || 'YouTube',
@@ -97,49 +116,91 @@ export default function YouTubeCard({ className = '' }) {
             startMs: yt.timestamps?.start ?? null,
             endMs: yt.timestamps?.end ?? null
           };
-          setVideo(v);
-          setState('watching');
-          const remembered = { title: v.title, channel: v.channel, thumb: v.thumb, url: v.url };
-          setLast(remembered);
-          saveLast('youtube', remembered);
+          setNow(v);
+          saveLast('yt-watch', { title: v.title, channel: v.channel, thumb: v.thumb, url: v.url });
         } else {
-          setVideo(null);
-          setState('offline');
+          setNow(null);
         }
       } catch (e) {
-        if (alive && e.name !== 'AbortError') setState('offline');
+        if (alive && e.name !== 'AbortError') setNow(null);
       }
     }
 
     poll();
-    timer.current = setInterval(() => {
+    lTimer.current = setInterval(() => {
       if (document.visibilityState === 'visible') poll();
-    }, POLL_MS);
-    const onVis = () => {
-      if (document.visibilityState === 'visible') poll();
-    };
+    }, PRESENCE_POLL_MS);
+    const onVis = () => document.visibilityState === 'visible' && poll();
     document.addEventListener('visibilitychange', onVis);
-
     return () => {
       alive = false;
       controller.abort();
-      clearInterval(timer.current);
+      clearInterval(lTimer.current);
       document.removeEventListener('visibilitychange', onVis);
     };
   }, []);
 
+  // 2. last watched — newest item in the curated playlist
   useEffect(() => {
-    if (state !== 'watching') return undefined;
+    if (!API_KEY || !WATCHED_PLAYLIST) return undefined;
+    let alive = true;
+    const controller = new AbortController();
+
+    async function fetchList() {
+      try {
+        const url =
+          'https://www.googleapis.com/youtube/v3/playlistItems' +
+          `?part=snippet&maxResults=50&playlistId=${WATCHED_PLAYLIST}&key=${API_KEY}`;
+        const res = await fetch(url, { signal: controller.signal });
+        const json = await res.json();
+        if (!alive) return;
+        const items = Array.isArray(json?.items) ? json.items : [];
+        // playlistItems.snippet.publishedAt = when it was ADDED to the playlist
+        const newest = items
+          .filter((i) => i?.snippet?.resourceId?.videoId)
+          .sort((a, b) => new Date(b.snippet.publishedAt) - new Date(a.snippet.publishedAt))[0];
+        if (!newest) return;
+        const sn = newest.snippet;
+        const t = sn.thumbnails || {};
+        const v = {
+          title: sn.title || 'YouTube',
+          channel: sn.videoOwnerChannelTitle || sn.channelTitle || 'YouTube',
+          thumb: (t.high || t.medium || t.default || {}).url || PLACEHOLDER,
+          url: `https://www.youtube.com/watch?v=${sn.resourceId.videoId}`,
+          addedAt: sn.publishedAt || ''
+        };
+        setFromList(v);
+        saveLast('yt-watch', { title: v.title, channel: v.channel, thumb: v.thumb, url: v.url });
+      } catch (e) {
+        if (alive && e.name !== 'AbortError') {
+          /* keep whatever we have */
+        }
+      }
+    }
+
+    fetchList();
+    pTimer.current = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchList();
+    }, PLAYLIST_POLL_MS);
+    return () => {
+      alive = false;
+      controller.abort();
+      clearInterval(pTimer.current);
+    };
+  }, []);
+
+  // 1s ticker for the progress bar while a live video is playing
+  useEffect(() => {
+    if (!now?.startMs) return undefined;
     const t = setInterval(() => setNowMs(Date.now()), 1000);
     return () => clearInterval(t);
-  }, [state]);
+  }, [now]);
 
-  const watching = state === 'watching' && !!video;
-  const src = watching ? video : last; // fall back to the last video seen
-  const mode = watching ? 'now' : src ? 'last' : 'off';
-  const totalMs = watching && video.endMs && video.startMs ? Math.max(0, video.endMs - video.startMs) : 0;
-  const elapsedMs = watching && video.startMs ? Math.max(0, nowMs - video.startMs) : 0;
-  const pct = totalMs ? Math.min(100, (elapsedMs / totalMs) * 100) : 0;
+  const src = now || fromList || cached;
+  const mode = now ? 'now' : src ? 'last' : 'off';
+  const totalMs = now?.endMs && now?.startMs ? Math.max(0, now.endMs - now.startMs) : 0;
+  const elapsedMs = now?.startMs ? Math.max(0, nowMs - now.startMs) : 0;
+  const pct = totalMs ? Math.min(100, (elapsedMs / totalMs) * 100) : mode === 'last' ? 33 : 0;
   const caption = src ? `${src.title} — ${src.channel}` : 'Offline';
   const label =
     mode === 'now' ? 'YouTube · Watching' : mode === 'last' ? 'YouTube · Last Watched' : 'YouTube · Offline';
@@ -152,7 +213,7 @@ export default function YouTubeCard({ className = '' }) {
         className={`h-[84px] w-[120px] shrink-0 rounded-md object-cover ${mode === 'last' ? 'opacity-70' : ''}`}
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <p className="line-clamp-2 text-[13px] font-bold leading-tight text-white">{src?.title || 'Nothing playing'}</p>
+        <p className="line-clamp-2 text-[13px] font-bold leading-tight text-white">{src?.title || 'Nothing here yet'}</p>
         <p className="truncate text-[11px] leading-tight text-white/55">{src?.channel || '—'}</p>
 
         <div className="mt-1.5 flex items-center gap-1.5">
@@ -167,8 +228,10 @@ export default function YouTubeCard({ className = '' }) {
           />
         </div>
         <div className="mt-0.5 flex justify-between text-[8px] tabular-nums text-white/40">
-          <span>{watching && totalMs ? fmt(elapsedMs) : ''}</span>
-          <span>{watching && totalMs ? fmt(totalMs) : ''}</span>
+          <span>{mode === 'now' && totalMs ? fmt(elapsedMs) : ''}</span>
+          <span>
+            {mode === 'now' && totalMs ? fmt(totalMs) : mode === 'last' && src?.addedAt ? timeAgo(src.addedAt) : ''}
+          </span>
         </div>
       </div>
     </div>
