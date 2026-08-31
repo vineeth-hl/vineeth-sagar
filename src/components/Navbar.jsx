@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCheck, FaDownload, FaBars, FaTimes, FaSun, FaMoon } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
+import usePreloaderReady from '../hooks/usePreloaderReady';
 
 const getInitialTheme = () => {
     if (typeof document !== 'undefined' && document.documentElement.classList.contains('light')) {
@@ -10,6 +12,7 @@ const getInitialTheme = () => {
 };
 
 const Navbar = () => {
+    const go = usePreloaderReady(); // hold entrance until the intro overlay lifts
     const [isDownloaded, setIsDownloaded] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [theme, setTheme] = useState(getInitialTheme);
@@ -47,8 +50,8 @@ const Navbar = () => {
     return (
         <motion.nav
             initial={{ y: -100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.7, ease: 'easeOut', delay: 3.0 }}
+            animate={go ? { y: 0, opacity: 1 } : { y: -100, opacity: 0 }}
+            transition={{ duration: 0.7, ease: 'easeOut', delay: 0.2 }}
             className="fixed top-6 inset-x-0 mx-auto z-[100] w-[95%] max-w-2xl px-0 md:px-4"
         >
             <div className="relative flex items-center justify-center px-5 py-3 rounded-lg bg-background/80 backdrop-blur-md border border-line">
@@ -86,6 +89,12 @@ const Navbar = () => {
                                 </a>
                             </li>
                         ))}
+                        <li>
+                            <Link to="/blog" className="hover:text-primary transition-colors relative group">
+                                Writing
+                                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent-blue transition-all group-hover:w-full" />
+                            </Link>
+                        </li>
                     </ul>
 
                     <ThemeToggle />
@@ -148,6 +157,15 @@ const Navbar = () => {
                                     </a>
                                 </li>
                             ))}
+                            <li>
+                                <Link
+                                    to="/blog"
+                                    className="block text-secondary hover:text-primary text-base font-medium py-2"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    Writing
+                                </Link>
+                            </li>
                             <li className="pt-2 border-t border-line">
                                 <a
                                     href="/resume.pdf"

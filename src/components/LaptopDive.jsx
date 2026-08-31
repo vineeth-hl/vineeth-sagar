@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
+import WebGLBoundary, { isWebGLAvailable } from './common/WebGLBoundary';
 
 const LaptopScene = lazy(() => import('./LaptopScene'));
 
@@ -34,6 +35,9 @@ const LaptopDive = () => {
     const [inView, setInView] = useState(false);
     const [reduced, setReduced] = useState(false);
     const [diveDone, setDiveDone] = useState(false);
+    // collapse the whole section if WebGL is unavailable or the scene errors,
+    // rather than letting a failed <Canvas> crash the app
+    const [noWebGL, setNoWebGL] = useState(() => !isWebGLAvailable());
 
     const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
     useMotionValueEvent(scrollYProgress, 'change', (v) => {
@@ -67,7 +71,7 @@ const LaptopDive = () => {
     // track so the hand-off into the dark About section has no bright->dark jump.
     const settleOpacity = useTransform(scrollYProgress, [0.93, 1], [0, 1]);
 
-    if (reduced) {
+    if (reduced || noWebGL) {
         return <section className="h-px w-full bg-background" aria-hidden />;
     }
 
@@ -75,9 +79,11 @@ const LaptopDive = () => {
         <section ref={ref} className="relative h-[240vh] bg-[#0D0D0D]">
             <div className="sticky top-0 h-screen w-full overflow-hidden">
                 {inView && (
-                    <Suspense fallback={<div className="absolute inset-0 bg-[#0D0D0D]" />}>
-                        <LaptopScene progress={progressRef} />
-                    </Suspense>
+                    <WebGLBoundary onError={() => setNoWebGL(true)} fallback={null}>
+                        <Suspense fallback={<div className="absolute inset-0 bg-[#0D0D0D]" />}>
+                            <LaptopScene progress={progressRef} />
+                        </Suspense>
+                    </WebGLBoundary>
                 )}
 
                 {/* legibility vignette over the lit screen */}

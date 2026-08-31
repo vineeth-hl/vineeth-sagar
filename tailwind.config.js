@@ -1,10 +1,9 @@
+import typography from '@tailwindcss/typography';
+
 /** @type {import('tailwindcss').Config} */
 export default {
     darkMode: 'class',
-    content: [
-        "./index.html",
-        "./src/**/*.{js,ts,jsx,tsx}",
-    ],
+    content: ['./index.html', './src/**/*.{js,ts,jsx,tsx,mdx}'],
     theme: {
         extend: {
             colors: {
@@ -18,15 +17,15 @@ export default {
                     gold: 'rgb(var(--accent-gold) / <alpha-value>)',
                     // legacy aliases -> resolve to the blue accent
                     purple: 'rgb(var(--accent) / <alpha-value>)',
-                    cyan: 'rgb(var(--accent) / <alpha-value>)',
-                },
+                    cyan: 'rgb(var(--accent) / <alpha-value>)'
+                }
             },
             fontFamily: {
                 sans: ['Inter', 'system-ui', 'sans-serif'],
                 heading: ['Inter', 'system-ui', 'sans-serif'],
-                mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
-            },
-        },
+                mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace']
+            }
+        }
     },
-    plugins: [],
-}
+    plugins: [typography]
+};

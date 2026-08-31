@@ -1,42 +1,8 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
-import './index.css'
+import { ViteReactSSG } from 'vite-react-ssg';
+import { routes } from './routes';
+import './index.css';
 
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    this.setState({ error, errorInfo });
-    console.error("Uncaught error:", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div style={{ color: 'red', padding: '20px', background: '#fff' }}>
-          <h1>Something went wrong.</h1>
-          <pre>{this.state.error && this.state.error.toString()}</pre>
-          <pre>{this.state.errorInfo && this.state.errorInfo.componentStack}</pre>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
-  </React.StrictMode>,
-)
+// Per-route <title> / <meta description> for the pre-rendered HTML is handled at
+// build time in vite.config.js (ssgOptions.onPageRendered). Client-side route
+// changes are kept in sync by the useTitle() hook in the blog pages.
+export const createRoot = ViteReactSSG({ routes });

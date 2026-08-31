@@ -1,0 +1,112 @@
+---
+title: "Building a Production RAG Pipeline That Doesn't Hallucinate"
+description: "How I took a naive retrieval-augmented setup from 61% to 92% answer faithfulness — chunking, hybrid retrieval, a reranker, and grounded generation with citations."
+date: "2026-07-14"
+tags: ["RAG", "LLMs", "Full-Stack"]
+reportUrl: "/reports/rag-pipeline-technical-report.pdf"
+---
+
+Most RAG demos work because the question happens to match a chunk almost verbatim.
+Production traffic is messier: paraphrases, multi-hop questions, and users who ask
+about things that simply aren't in the corpus. This is how I got a real system to
+**92% answer faithfulness** without fine-tuning the base model.
+
+## The naive baseline
+
+The first version was the tutorial version:
+
+```python
+chunks = splitter.split(docs, chunk_size=1000, chunk_overlap=0)
+store = FAISS.from_documents(chunks, OpenAIEmbeddings())
+
+def answer(q: str) -> str:
+    ctx = store.similarity_search(q, k=4)
+    prompt = f"Context:\n{ctx}\n\nQuestion: {q}\nAnswer:"
+    return llm.invoke(prompt)
+```
+
+On a 300-question eval set it scored **61% faithful** (answer supported by the
+retrieved context) and **48% complete**. The failure modes were predictable:
+
+- fixed-size chunks cut sentences and tables in half
+- dense-only retrieval missed exact identifiers (`CVE-2024-3094`, `SKU-19022`)
+- the model answered confidently even when `k=4` returned nothing relevant
+
+## Fixes, in order of impact
+
+### 1. Structure-aware chunking
+
+Splitting on Markdown/HTML structure instead of character count kept headings with
+their bodies and never bisected a code block or table.
+
+```python
+splitter = MarkdownHeaderTextSplitter(
+    headers_to_split_on=[("#", "h1"), ("##", "h2"), ("###", "h3")]
+)
+# then a soft 512-token cap with 64-token overlap *within* a section
+```
+
+Faithfulness: 61% → **71%**.
+
+### 2. Hybrid retrieval (BM25 + dense)
+
+Reciprocal Rank Fusion over a lexical and a semantic retriever. BM25 rescues the
+keyword-y queries; embeddings handle the paraphrases.
+
+```python
+def rrf(rankings: list[list[str]], k: int = 60) -> dict[str, float]:
+    scores: dict[str, float] = {}
+    for ranking in rankings:
+        for rank, doc_id in enumerate(ranking):
+            scores[doc_id] = scores.get(doc_id, 0) + 1 / (k + rank)
+    return scores
+```
+
+Faithfulness: 71% → **79%**.
+
+### 3. A cross-encoder reranker
+
+Fetch 20 candidates, rerank with `bge-reranker-base`, keep the top 5. This is the
+single highest-leverage change after chunking — the generator only ever sees
+tightly relevant context.
+
+<Callout type="tip" title="Latency budget">
+The reranker adds ~90 ms for 20 pairs on CPU. Worth it. If you need it faster,
+quantize to int8 or move the top-20 fetch to an approximate index and rerank on GPU.
+</Callout>
+
+Faithfulness: 79% → **88%**.
+
+### 4. Grounded generation + refusal
+
+The prompt now forces citation and permits "I don't know":
+
+```text
+Answer ONLY from the numbered context. Cite sources as [1], [2].
+If the context does not contain the answer, say exactly:
+"I don't have enough information to answer that."
+```
+
+Plus a cheap post-check: if the answer contains no `[n]` citation and isn't the
+refusal string, we regenerate once, then fall back to the refusal.
+
+Faithfulness: 88% → **92%**. Refusal precision on out-of-corpus questions went from
+9% to 84%.
+
+## The shape of the system
+
+```
+query ──▶ [ BM25 ]──┐
+        └▶ [ dense ]─┴─▶ RRF ─▶ top-20 ─▶ reranker ─▶ top-5
+                                                        │
+                                        grounded prompt ▼
+                                     LLM ─▶ citation check ─▶ answer + sources
+```
+
+## What I'd do next
+
+- **Query decomposition** for multi-hop questions (split, retrieve per sub-question, merge).
+- **Answer-conditioned retrieval** — a second retrieval pass using a draft answer as the query.
+- Swap the offline eval for an **LLM-as-judge CI gate** so regressions block deploys.
+
+The full methodology, eval harness, and ablation tables are in the report below.
