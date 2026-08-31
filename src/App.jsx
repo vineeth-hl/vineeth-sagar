@@ -1,5 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import Lenis from '@studio-freight/lenis';
+import Preloader from './components/Preloader/Preloader';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import LaptopDive from './components/LaptopDive';
@@ -13,6 +15,8 @@ import VisitorCounter from './components/VisitorCounter';
 import Footer from './components/Footer';
 
 const App = () => {
+  const [loaded, setLoaded] = useState(false);
+
   useEffect(() => {
     const lenis = new Lenis({
       duration: 1.2,
@@ -42,6 +46,10 @@ const App = () => {
 
   return (
     <div className="min-h-screen">
+      <AnimatePresence>
+        {!loaded && <Preloader key="preloader" onComplete={() => setLoaded(true)} />}
+      </AnimatePresence>
+
       <Navbar />
 
       <main>

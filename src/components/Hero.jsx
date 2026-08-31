@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NowPlaying from './NowPlaying/NowPlaying';
+import usePreloaderReady from '../hooks/usePreloaderReady';
 
 const INITIAL = 'VINEETH';
 const FINAL = 'PORTFOLIO';
@@ -26,12 +27,14 @@ const T_UI = 3.0;         // navbar + subtitle + button + now-playing (comes in 
  * Hero stays dark regardless of the site theme.
  */
 const Hero = () => {
+    const go = usePreloaderReady(); // hold the sequence until the intro overlay lifts
     const [word, setWord] = useState(INITIAL);
 
     useEffect(() => {
+        if (!go) return undefined;
         const t = setTimeout(() => setWord(FINAL), T_HOLD * 1000);
         return () => clearTimeout(t);
-    }, []);
+    }, [go]);
 
     const uiItem = {
         hidden: { opacity: 0, y: 20 },
@@ -40,6 +43,8 @@ const Hero = () => {
 
     return (
         <section className="relative h-screen w-full overflow-hidden bg-[#0D0D0D] tracking-tight">
+          {go && (
+            <>
             {/* Layer 1 — deep background radial glow */}
             <div
                 className="absolute inset-0 z-0 pointer-events-none"
@@ -122,6 +127,8 @@ const Hero = () => {
             >
                 <NowPlaying />
             </motion.div>
+            </>
+          )}
         </section>
     );
 };
