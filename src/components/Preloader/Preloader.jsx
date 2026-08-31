@@ -14,9 +14,9 @@ import { motion } from 'framer-motion';
 
 const PANEL_EASE = [0.83, 0, 0.17, 1];
 const DRAW_EASE = [0.65, 0, 0.35, 1];
-const MIN_MS = 3000; // floor so the trace is actually seen
-const HOLD_MS = 1500; // sit on the finished frame so the subtitle is readable
-const CAP_MS = 9000; // never hang the site
+const MIN_MS = 2800; // floor so the trace is actually seen
+const HOLD_MS = 1000; // sit on the finished frame so the subtitle is readable
+const CAP_MS = 8000; // never hang the site
 
 const NAME = 'VINEETH SAGAR H L';
 
@@ -113,7 +113,7 @@ export default function Preloader({ onComplete }) {
                         strokeLinejoin="round"
                         initial={{ pathLength: reduced ? 1 : 0 }}
                         animate={{ pathLength: 1 }}
-                        transition={D({ duration: 1.3, ease: DRAW_EASE, delay: 0.25 })}
+                        transition={D({ duration: 1.0, ease: DRAW_EASE, delay: 0.2 })}
                     />
                     <motion.path
                         d="M36 122 L104 122"
@@ -122,7 +122,7 @@ export default function Preloader({ onComplete }) {
                         strokeLinecap="round"
                         initial={{ pathLength: reduced ? 1 : 0 }}
                         animate={{ pathLength: 1 }}
-                        transition={D({ duration: 0.55, ease: 'easeInOut', delay: 1.35 })}
+                        transition={D({ duration: 0.5, ease: 'easeInOut', delay: 1.05 })}
                     />
                     <motion.circle
                         cx="70"
@@ -131,7 +131,7 @@ export default function Preloader({ onComplete }) {
                         fill="#F7F7F7"
                         initial={{ scale: reduced ? 1 : 0 }}
                         animate={{ scale: 1 }}
-                        transition={D({ duration: 0.4, ease: 'backOut', delay: 1.3 })}
+                        transition={D({ duration: 0.4, ease: 'backOut', delay: 1.0 })}
                     />
                 </motion.svg>
 
@@ -149,7 +149,7 @@ export default function Preloader({ onComplete }) {
                         }}
                         initial={{ clipPath: reduced ? 'inset(0% 0% 0% 0%)' : 'inset(0% 100% 0% 0%)' }}
                         animate={{ clipPath: 'inset(0% 0% 0% 0%)' }}
-                        transition={D({ duration: 2.1, ease: [0.4, 0, 0.2, 1], delay: 1.1 })}
+                        transition={D({ duration: 1.6, ease: [0.4, 0, 0.2, 1], delay: 0.85 })}
                     >
                         {NAME}
                     </motion.p>
@@ -158,7 +158,7 @@ export default function Preloader({ onComplete }) {
                         className="h-[2px] w-full origin-left rounded-full bg-[#1E90FF]"
                         initial={{ scaleX: reduced ? 1 : 0 }}
                         animate={{ scaleX: 1 }}
-                        transition={D({ duration: 0.55, ease: [0.4, 0, 0.2, 1], delay: 3.1 })}
+                        transition={D({ duration: 0.5, ease: [0.4, 0, 0.2, 1], delay: 2.4 })}
                     />
                 </div>
 
@@ -166,7 +166,7 @@ export default function Preloader({ onComplete }) {
                     className="font-mono text-[10px] uppercase tracking-[0.42em] text-white/50 md:text-[11px]"
                     initial={{ opacity: reduced ? 1 : 0, y: reduced ? 0 : 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={D({ duration: 0.7, ease: 'easeOut', delay: 3.7 })}
+                    transition={D({ duration: 0.6, ease: 'easeOut', delay: 2.85 })}
                     onAnimationComplete={() => {
                         // sit on the fully-drawn frame long enough to read the line
                         setTimeout(() => {
@@ -185,7 +185,7 @@ export default function Preloader({ onComplete }) {
                     className="h-full origin-left bg-[#1E90FF]"
                     initial={{ scaleX: reduced ? 1 : 0 }}
                     animate={{ scaleX: 1 }}
-                    transition={D({ duration: 5.2, ease: [0.4, 0, 0.2, 1] })}
+                    transition={D({ duration: 4.0, ease: [0.4, 0, 0.2, 1] })}
                 />
             </div>
         </motion.div>
