@@ -36,8 +36,10 @@ const LaptopDive = () => {
     const [reduced, setReduced] = useState(false);
     const [diveDone, setDiveDone] = useState(false);
     // collapse the whole section if WebGL is unavailable or the scene errors,
-    // rather than letting a failed <Canvas> crash the app
-    const [noWebGL, setNoWebGL] = useState(() => !isWebGLAvailable());
+    // rather than letting a failed <Canvas> crash the app. Start optimistic so
+    // the pre-rendered (SSG) markup matches the client's first render; the probe
+    // runs in an effect below and only then downgrades to the spacer.
+    const [noWebGL, setNoWebGL] = useState(false);
 
     const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] });
     useMotionValueEvent(scrollYProgress, 'change', (v) => {
@@ -50,6 +52,7 @@ const LaptopDive = () => {
         progressRef.current = p;
         setDiveDone(p >= DIVE_END);
         setReduced(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
+        if (!isWebGLAvailable()) setNoWebGL(true);
         const t = setTimeout(() => import('./LaptopScene'), 2500); // warm the 3D chunk
         return () => clearTimeout(t);
     }, [scrollYProgress]);

@@ -15,10 +15,15 @@ const LanyardCard = ({ photo }) => {
     const ref = useRef(null);
     const [inView, setInView] = useState(false);
     const [reduced, setReduced] = useState(false);
-    const [noWebGL, setNoWebGL] = useState(() => !isWebGLAvailable());
+    // Assume WebGL is available for the first (hydration) render so the
+    // pre-rendered markup matches; downgrade to the static photo in an effect
+    // only if the probe actually fails. Deciding this during render would make
+    // SSG emit the fallback and then mismatch on the client.
+    const [noWebGL, setNoWebGL] = useState(false);
 
     useEffect(() => {
         setReduced(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
+        if (!isWebGLAvailable()) setNoWebGL(true);
     }, []);
 
     useEffect(() => {
