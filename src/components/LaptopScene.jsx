@@ -294,16 +294,29 @@ function DiveBloom({ progress }) {
     );
 }
 
-const LaptopScene = ({ progress }) => {
+const LaptopScene = ({ progress, active = true, onContextLost }) => {
     const screenRef = useRef();
     const diveTargetRef = useRef();
     return (
         <Canvas
             shadows
+            // keep the loop running while the section is anywhere near the
+            // viewport; pause it (not unmount it) once it's well off-screen
+            frameloop={active ? 'always' : 'never'}
             dpr={[1, 1.7]}
             gl={{ antialias: true, powerPreference: 'high-performance' }}
             camera={{ position: [0, 0.7, 8], fov: 50, near: 0.01, far: 100 }}
             style={{ position: 'absolute', inset: 0 }}
+            onCreated={({ gl }) => {
+                gl.domElement.addEventListener(
+                    'webglcontextlost',
+                    (e) => {
+                        e.preventDefault();
+                        onContextLost?.();
+                    },
+                    { once: true }
+                );
+            }}
         >
             <color attach="background" args={['#0D0D0D']} />
             <fog attach="fog" args={['#0D0D0D', 7, 18]} />

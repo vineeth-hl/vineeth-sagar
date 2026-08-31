@@ -32,7 +32,13 @@ const DIVE_END = 0.8;
 const LaptopDive = () => {
     const ref = useRef(null);
     const progressRef = useRef(0);
-    const [inView, setInView] = useState(false);
+    // `mounted` is a one-way latch: once the section has been near the viewport
+    // the <Canvas> stays mounted for the life of the page. `onScreen` is the
+    // live visibility used only to pause the render loop. Unmounting the scene
+    // on every scroll-past destroyed and rebuilt a heavy WebGL context each
+    // time, which Chrome eventually punishes with "context lost" (black canvas).
+    const [mounted, setMounted] = useState(false);
+    const [onScreen, setOnScreen] = useState(false);
     const [reduced, setReduced] = useState(false);
     const [diveDone, setDiveDone] = useState(false);
     // collapse the whole section if WebGL is unavailable or the scene errors,
@@ -60,9 +66,13 @@ const LaptopDive = () => {
     useEffect(() => {
         const el = ref.current;
         if (!el) return;
-        const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), {
-            rootMargin: '25% 0px 25% 0px',
-        });
+        const io = new IntersectionObserver(
+            ([e]) => {
+                if (e.isIntersecting) setMounted(true); // latch on, never off
+                setOnScreen(e.isIntersecting); // drives frameloop only
+            },
+            { rootMargin: '25% 0px 25% 0px' }
+        );
         io.observe(el);
         return () => io.disconnect();
     }, []);
@@ -81,10 +91,10 @@ const LaptopDive = () => {
     return (
         <section ref={ref} className="relative h-[240vh] bg-[#0D0D0D]">
             <div className="sticky top-0 h-screen w-full overflow-hidden">
-                {inView && (
+                {mounted && (
                     <WebGLBoundary onError={() => setNoWebGL(true)} fallback={null}>
                         <Suspense fallback={<div className="absolute inset-0 bg-[#0D0D0D]" />}>
-                            <LaptopScene progress={progressRef} />
+                            <LaptopScene progress={progressRef} active={onScreen} onContextLost={() => setNoWebGL(true)} />
                         </Suspense>
                     </WebGLBoundary>
                 )}
