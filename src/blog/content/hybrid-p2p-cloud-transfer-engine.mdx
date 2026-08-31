@@ -3,7 +3,10 @@ title: "Hybrid P2P-Cloud Anonymous Transfer Engine"
 description: "A privacy-first file-transfer platform that races WebRTC peer-to-peer against an AWS S3 relay on a 5-second timer, buffers chunks in IndexedDB to keep RAM flat, and self-destructs cloud copies with a Lambda nuke plus a 24h lifecycle."
 date: "2026-08-14"
 tags: ["Distributed Systems", "WebRTC", "Cloud", "Full-Stack"]
+pinned: 3
 downloads:
+  - label: "Read Online"
+    url: "/reports/Hybrid P2P-Cloud/hybrid-p2p-report.html"
   - label: "Project Report"
     url: "/reports/Hybrid P2P-Cloud/Hybrid_P2P_Cloud_Transfer_Engine_Project_Report.pdf"
 ---
@@ -95,7 +98,7 @@ The heart of the system is the **hybrid transfer controller** (`useHybridTransfe
 │  ┌─────────────────────────────────────┐        │
 │  │ State: p2p_pending                  │        │
 │  │ → connectAndOffer()                 │        │
-│  │ → Start 5-second countdown ⏱️       │        │
+│  │ → Start 5-second countdown        │        │
 │  └──────────┬──────────────┬───────────┘        │
 │             │              │                    │
 │    P2P connected       Timer expires            │
@@ -147,38 +150,38 @@ The system is designed to **never hard-fail**:
 
 ## Key Features
 
-### 🔗 WebRTC Peer-to-Peer Transfer
+### WebRTC Peer-to-Peer Transfer
 - **RTCDataChannel** with binary chunking at **16KB** (SCTP maximum transmission unit sweet spot).
 - **Backpressure flow control** using `bufferedAmountLowThreshold` (64KB) to prevent buffer exhaustion on slow connections.
 - **ICE Trickle** with Google STUN (`stun:stun.l.google.com:19302`) and self-hosted **Coturn TURN** relay for NAT traversal.
 
-### 🔀 Hybrid 5-Second Race Fallback
+### Hybrid 5-Second Race Fallback
 - Races P2P connection against a 5-second timer.
 - Seamless pivot to cloud relay — the user sees only a badge change (`P2P Direct` → `Cloud Server Relay`).
 - Dynamic progress bar changes gradient color based on active route.
 
-### 👥 Anonymous Identity & Live Lobby
+### Anonymous Identity & Live Lobby
 - Auto-generated hacker-style handles (`Hacker_4821`).
 - JWT-based stateless sessions (HS256, 2-hour expiry).
 - Redis ephemeral presence with 60-second TTL keys and 30-second heartbeat pulses.
 - Real-time lobby showing online peers, updated every 10 seconds.
 
-### ☁️ Zero-Disk S3 Streaming Upload
+### Zero-Disk S3 Streaming Upload
 - `aioboto3` async multipart upload with **5MB chunk streaming** — files never touch the API server's disk or accumulate in memory.
 - Returns 1-hour presigned download URLs.
 - Three-layer file destruction (abort, Lambda nuke, 24h lifecycle).
 
-### 📊 Prometheus Observability
+### Prometheus Observability
 - Auto-instrumented metrics via `prometheus-fastapi-instrumentator`.
 - Kubernetes `ServiceMonitor` CRD scraping `/metrics` every 15 seconds.
 - Request latency histograms, error rate counters, and throughput gauges out of the box.
 
-### 🐳 Production Container Security
+### Production Container Security
 - All containers run as **non-root users** (`appuser`, `nginx`).
 - Multi-stage Docker builds minimize attack surface (no build tools in production images).
 - Kubernetes resource limits prevent memory leaks and CPU starvation.
 
-### 🔌 Event-Driven Signaling
+### Event-Driven Signaling
 - Node.js Socket.IO server acting as a **pure relay** — it never sees file content, only SDP offers/answers and ICE candidates.
 - In-memory `Map` for UUID-to-socket mapping with automatic cleanup on disconnect.
 
@@ -312,12 +315,12 @@ class TokenResponse(BaseModel):
 
 | Method | Endpoint | Auth | Request Body | Response | Purpose |
 |:---:|:---|:---:|:---|:---|:---|
-| `GET` | `/ping` | ❌ | — | `{"status": "ok", "message": "pong"}` | Health check |
-| `GET` | `/metrics` | ❌ | — | Prometheus text format | Auto-instrumented metrics |
-| `POST` | `/api/auth/join` | ❌ | `{"anonymous_name": "Hacker_4821"}` | `{"access_token": "eyJ...", "token_type": "bearer"}` | Anonymous session creation |
-| `POST` | `/api/heartbeat` | ✅ | `{}` | `200 OK` | Refresh Redis presence TTL to 60s |
-| `GET` | `/api/users/online` | ❌ | — | `[{"user_id": "uuid", "name": "Hacker_4821"}]` | List active peers |
-| `POST` | `/api/upload` | ✅ | `multipart/form-data` (file) | `{"url": "https://s3...presigned"}` | S3 cloud fallback upload |
+| `GET` | `/ping` | No | — | `{"status": "ok", "message": "pong"}` | Health check |
+| `GET` | `/metrics` | No | — | Prometheus text format | Auto-instrumented metrics |
+| `POST` | `/api/auth/join` | No | `{"anonymous_name": "Hacker_4821"}` | `{"access_token": "eyJ...", "token_type": "bearer"}` | Anonymous session creation |
+| `POST` | `/api/heartbeat` | Yes | `{}` | `200 OK` | Refresh Redis presence TTL to 60s |
+| `GET` | `/api/users/online` | No | — | `[{"user_id": "uuid", "name": "Hacker_4821"}]` | List active peers |
+| `POST` | `/api/upload` | Yes | `multipart/form-data` (file) | `{"url": "https://s3...presigned"}` | S3 cloud fallback upload |
 
 ### WebSocket Signaling Events (Socket.IO — Port 3001)
 
@@ -598,13 +601,13 @@ Push to your Git repository — `render.yaml` auto-deploys:
 
 | Variable | Required | Default | Description |
 |:---|:---:|:---|:---|
-| `SECRET_KEY` | ✅ | — | JWT HS256 signing secret |
-| `REDIS_URL` | ❌ | `None` (falls back to InMemoryStore) | Redis connection URI |
-| `AWS_ACCESS_KEY_ID` | ✅ | — | AWS IAM access key |
-| `AWS_SECRET_ACCESS_KEY` | ✅ | — | AWS IAM secret key |
-| `AWS_REGION` | ✅ | `eu-north-1` | AWS region for S3 |
-| `S3_BUCKET_NAME` | ✅ | — | Target S3 bucket name |
-| `PORT` | ❌ | `8000` / `3001` | Dynamic port (Railway/Render) |
+| `SECRET_KEY` | Yes | — | JWT HS256 signing secret |
+| `REDIS_URL` | No | `None` (falls back to InMemoryStore) | Redis connection URI |
+| `AWS_ACCESS_KEY_ID` | Yes | — | AWS IAM access key |
+| `AWS_SECRET_ACCESS_KEY` | Yes | — | AWS IAM secret key |
+| `AWS_REGION` | Yes | `eu-north-1` | AWS region for S3 |
+| `S3_BUCKET_NAME` | Yes | — | Target S3 bucket name |
+| `PORT` | No | `8000` / `3001` | Dynamic port (Railway/Render) |
 
 ## WebRTC Signaling Protocol Deep Dive
 

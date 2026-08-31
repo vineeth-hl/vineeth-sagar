@@ -4,10 +4,10 @@ description: "A field-resilient crop-diagnosis platform: a dual ResNet-50 ensemb
 date: "2026-08-28"
 tags: ["Computer Vision", "Deep Learning", "AI/ML", "Full-Stack"]
 downloads:
-  - label: "Project Report"
-    url: "/reports/plant-disease/Plant-Disease-Detection-Report.pdf"
   - label: "Read Online"
     url: "/reports/plant-disease/plant-disease-report.html"
+  - label: "Project Report"
+    url: "/reports/plant-disease/Plant-Disease-Detection-Report.pdf"
 ---
 
 **Comprehensive Technical Architecture, Machine Learning Pipeline, and Implementation Report**
@@ -25,7 +25,7 @@ The **Plant Disease Detection & Hybrid Treatment System** is an enterprise-grade
 ## 2. Problem Statement & Agricultural Context
 
 ### The Challenge
-Global agricultural production loses between **20% and 40% of crop yields** annually to pests and diseases. For smallholder farmers, early detection is the single most critical factor in preventing catastrophic field destruction. 
+Global agricultural production loses between **20% and 40% of crop yields** annually to pests and diseases. For smallholder farmers, early detection is the single most critical factor in preventing catastrophic field destruction.
 
 ### Limitations of Current Methods:
 1. **Manual Inspection**: Requires certified agronomists, which are scarce, costly, and unavailable in remote agricultural zones.
@@ -45,7 +45,7 @@ The application is structured into three decoupled layers: **Presentation (Next.
 │                         (Next.js 16 + React 19)                             │
 │                                                                             │
 │   ┌───────────────────────────┐             ┌───────────────────────────┐   │
-│   │    📸 WebRTC Camera       │             │    📁 File Drag-and-Drop  │   │
+│   │     WebRTC Camera       │             │     File Drag-and-Drop  │   │
 │   │    (Stream / Frame Grab)  │             │    (Local Blob Preview)   │   │
 │   └─────────────┬─────────────┘             └─────────────┬─────────────┘   │
 │                 │                                         │                 │
@@ -67,7 +67,7 @@ The application is structured into three decoupled layers: **Presentation (Next.
 │                   INFERENCE & REASONING LAYER (Flask API)                   │
 │                                                                             │
 │   ┌─────────────────────────────────────────────────────────────────────┐   │
-│   │ 1. Preprocessing Pipeline: PIL Convert('RGB') ➔ CenterCrop ➔ Tensors│   │
+│   │ 1. Preprocessing Pipeline: PIL Convert('RGB') -> CenterCrop -> Tensors│   │
 │   └──────────────────────────────────┬──────────────────────────────────┘   │
 │                                      │ Generates 5 TTA Image Variants       │
 │                                      ▼                                      │
@@ -100,8 +100,8 @@ The application is structured into three decoupled layers: **Presentation (Next.
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                        DIAGNOSTIC DISPLAY & UI CARDS                        │
 │   • Disease Identity Card (Confidence Score Badge: Green / Yellow / Red)   │
-│   • 🌿 Organic Treatment Card       • 🧪 Chemical Intervention Card        │
-│   • 🛡️ Prevention Measures Card     • ⏱️ Application Timing & Severity Card│
+│   •  Organic Treatment Card       •  Chemical Intervention Card        │
+│   •  Prevention Measures Card     •  Application Timing & Severity Card│
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -121,7 +121,7 @@ $$
 Input (3, 224, 224)
    │
    ▼
-Conv1 (7x7, 64, stride 2) ➔ BatchNorm ➔ ReLU ➔ MaxPool (3x3, stride 2)
+Conv1 (7x7, 64, stride 2) -> BatchNorm -> ReLU -> MaxPool (3x3, stride 2)
    │
    ▼
 Layer 1: 3 Bottleneck Residual Blocks [64, 64, 256]
@@ -136,10 +136,10 @@ Layer 3: 6 Bottleneck Residual Blocks [256, 256, 1024]
 Layer 4: 3 Bottleneck Residual Blocks [512, 512, 2048]
    │
    ▼
-Adaptive Average Pooling (1x1) ➔ Flatten (2048-dim vector)
+Adaptive Average Pooling (1x1) -> Flatten (2048-dim vector)
    │
    ▼
-Custom Linear Classifier (2048 ➔ 38 Classes)
+Custom Linear Classifier (2048 -> 38 Classes)
 ```
 
 ### 4.2 Two-Phase Transfer Learning Strategy

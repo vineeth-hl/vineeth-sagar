@@ -5,6 +5,10 @@
 //   headings       -> [{ id, text, level }] for the TOC (via remarkTocHeadings)
 const modules = import.meta.glob('./content/*.mdx', { eager: true });
 
+// `pinned` in frontmatter: a number is an explicit rank (1 = first); `true`
+// pins after the numbered ones; anything else is unpinned.
+const pinRank = (v) => (typeof v === 'number' ? v : v === true ? Number.MAX_SAFE_INTEGER : null);
+
 const slugOf = (path) => path.split('/').pop().replace(/\.mdx$/, '');
 
 // Normalise download links: prefer a `downloads: [{ label, url }]` list in
@@ -34,12 +38,19 @@ export const posts = Object.entries(modules)
             tags: Array.isArray(fm.tags) ? fm.tags : [],
             thumbnail: fm.thumbnail || null,
             downloads,
-            reportUrl: downloads[0]?.url || null,
+            reportUrl: downloads.find((d) => /\.pdf(\?|#|$)/i.test(d.url))?.url || downloads[0]?.url || null,
+            pinned: pinRank(fm.pinned),
             readingMinutes: mod.readingMinutes || 1,
             headings: Array.isArray(mod.headings) ? mod.headings : []
         };
     })
-    .sort((a, b) => (a.date < b.date ? 1 : -1));
+    .sort((a, b) => {
+        // pinned posts first (by rank), then the rest newest-first
+        if (a.pinned != null && b.pinned != null) return a.pinned - b.pinned;
+        if (a.pinned != null) return -1;
+        if (b.pinned != null) return 1;
+        return a.date < b.date ? 1 : -1;
+    });
 
 export const getAllPosts = () => posts;
 export const getPost = (slug) => posts.find((p) => p.slug === slug);

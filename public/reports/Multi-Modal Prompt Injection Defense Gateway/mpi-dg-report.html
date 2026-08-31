@@ -1,0 +1,610 @@
+<title>MPI-DG — Multi-Modal Prompt Injection Defense Gateway</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    --paper:#f4f6fa;
+    --surface:#ffffff;
+    --surface-2:#e9eef6;
+    --ink:#141a24;
+    --muted:#516074;
+    --faint:#83909f;
+    --line:#d5deea;
+    --accent:#1d63d1;
+    --accent-soft:#e0ebfb;
+    --warn:#9a5f0d;
+    --crit:#a63b2b;
+    --ok:#1f7a43;
+    --shadow:0 1px 2px rgba(16,22,32,.04), 0 8px 24px -12px rgba(16,22,32,.16);
+
+    --f-display:"Fraunces", Georgia, "Times New Roman", serif;
+    --f-body:"IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+    --measure:66ch;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0d1117;
+      --surface:#151b23;
+      --surface-2:#1a222d;
+      --ink:#e6ebf2;
+      --muted:#9aa7b8;
+      --faint:#6a7688;
+      --line:#28323f;
+      --accent:#5f9bf0;
+      --accent-soft:#12213a;
+      --warn:#d69a4e;
+      --crit:#e77762;
+      --ok:#5bbd83;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0d1117;
+    --surface:#151b23;
+    --surface-2:#1a222d;
+    --ink:#e6ebf2;
+    --muted:#9aa7b8;
+    --faint:#6a7688;
+    --line:#28323f;
+    --accent:#5f9bf0;
+    --accent-soft:#12213a;
+    --warn:#d69a4e;
+    --crit:#e77762;
+    --ok:#5bbd83;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.55);
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+  header.top{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem clamp(1rem,4vw,2.4rem);background:color-mix(in srgb, var(--paper) 86%, transparent);backdrop-filter:saturate(140%) blur(8px);border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:.6rem;font-family:var(--f-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  .top nav{display:flex;gap:.4rem;align-items:center}
+  .top nav a{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;color:var(--muted);text-decoration:none;padding:.3rem .55rem;border-radius:6px}
+  .top nav a:hover{color:var(--ink);background:var(--surface-2)}
+  .toggle{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;background:var(--surface);color:var(--muted);border:1px solid var(--line);padding:.35rem .6rem;border-radius:7px;cursor:pointer}
+  .toggle:hover{color:var(--ink);border-color:var(--accent)}
+
+  main{max-width:960px;margin:0 auto;padding:0 clamp(1rem,4vw,2.4rem) 6rem}
+  .prose{max-width:var(--measure)}
+  p{margin:0 0 1rem}
+  a{color:var(--accent);text-underline-offset:2px}
+
+  .hero{padding:clamp(2.6rem,7vw,5rem) 0 clamp(1.8rem,4vw,3rem);border-bottom:1px solid var(--line);animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+  @media (prefers-reduced-motion: reduce){ .hero{animation:none} }
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .eyebrow{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:1.2rem;display:flex;align-items:center;gap:.7rem}
+  .eyebrow::before{content:"";width:34px;height:1px;background:var(--accent)}
+  h1{font-family:var(--f-display);font-weight:600;font-size:clamp(2rem,6vw,3.4rem);line-height:1.04;letter-spacing:-.01em;margin:0 0 1rem;text-wrap:balance}
+  .lede{font-size:clamp(1.05rem,2.4vw,1.28rem);color:var(--muted);max-width:56ch;margin-bottom:2rem}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .stat{background:var(--surface);padding:1.1rem 1.15rem}
+  .stat .n{font-family:var(--f-display);font-weight:600;font-size:1.6rem;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .stat .l{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-top:.5rem}
+  .meta-line{margin-top:1.5rem;font-family:var(--f-mono);font-size:.74rem;color:var(--faint);letter-spacing:.04em}
+  @media (max-width:680px){ .stats{grid-template-columns:repeat(2,1fr)} }
+
+  .toc{margin:2.5rem 0 0;padding:1.4rem 1.5rem;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+  .toc h2{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:0 0 1rem}
+  .toc ol{margin:0;padding:0;list-style:none;columns:2;column-gap:2.5rem}
+  .toc li{margin:0 0 .5rem;break-inside:avoid}
+  .toc a{display:flex;gap:.7rem;text-decoration:none;color:var(--ink);font-size:.92rem}
+  .toc a:hover{color:var(--accent)}
+  .toc a .num{font-family:var(--f-mono);font-size:.78rem;color:var(--faint);min-width:1.4rem}
+  @media (max-width:640px){ .toc ol{columns:1} }
+
+  section{padding:clamp(2.4rem,5vw,3.6rem) 0;border-bottom:1px solid var(--line)}
+  .sec-head{margin-bottom:1.6rem}
+  .sec-num{font-family:var(--f-mono);font-size:.76rem;letter-spacing:.14em;color:var(--accent);display:block;margin-bottom:.5rem}
+  h2.sec-title{font-family:var(--f-display);font-weight:600;font-size:clamp(1.5rem,3.6vw,2.1rem);line-height:1.1;letter-spacing:-.01em;margin:0;text-wrap:balance}
+  h3{font-family:var(--f-body);font-weight:600;font-size:1.06rem;margin:2.2rem 0 .7rem;color:var(--ink);display:flex;align-items:baseline;gap:.6rem}
+  h3 .h3num{font-family:var(--f-mono);font-size:.8rem;color:var(--accent);font-weight:500}
+  h4{font-family:var(--f-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:1.6rem 0 .6rem}
+
+  ul,ol.body-list{margin:0 0 1rem;padding-left:1.2rem}
+  li{margin:.35rem 0}
+  strong{font-weight:600;color:var(--ink)}
+  .prose ul li::marker{color:var(--accent)}
+
+  .callout{border-left:2px solid var(--accent);background:var(--accent-soft);padding:1rem 1.2rem;border-radius:0 10px 10px 0;margin:1.4rem 0;max-width:var(--measure)}
+  .callout p:last-child{margin:0}
+  .callout .tag{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:.35rem}
+
+  figure{margin:2rem 0;padding:0}
+  .fig-frame{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:clamp(1rem,3vw,1.8rem);box-shadow:var(--shadow);overflow-x:auto}
+  figure svg{display:block;width:100%;height:auto;min-width:540px;color:var(--ink)}
+  figcaption{margin-top:.9rem;font-size:.86rem;color:var(--muted);font-family:var(--f-body);max-width:var(--measure)}
+  figcaption b{color:var(--ink);font-weight:600}
+
+  .d-band{fill:var(--surface-2);stroke:var(--line);stroke-width:1}
+  .d-bandlabel{fill:var(--faint);font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+  .d-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+  .d-box-accent{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.75}
+  .d-title{fill:var(--ink);font-family:var(--f-body);font-size:13px;font-weight:600}
+  .d-sub{fill:var(--muted);font-family:var(--f-mono);font-size:11px}
+  .d-flow{fill:none;stroke:var(--muted);stroke-width:1.5}
+  .d-flow-accent{fill:none;stroke:var(--accent);stroke-width:2}
+  .d-lbl{fill:var(--muted);font-family:var(--f-mono);font-size:11px}
+  .d-lbl-em{fill:var(--accent);font-family:var(--f-mono);font-size:11px;font-weight:500}
+  .d-arrowhead{fill:var(--muted)}
+  .d-arrowhead-accent{fill:var(--accent)}
+  .d-diamond{fill:var(--surface);stroke:var(--accent);stroke-width:1.75}
+
+  .table-wrap{overflow-x:auto;margin:1.4rem 0;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:520px}
+  caption{caption-side:bottom;text-align:left;padding:.7rem .9rem;color:var(--faint);font-size:.8rem;font-family:var(--f-mono)}
+  th,td{padding:.65rem .9rem;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  thead th{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500;background:var(--surface-2)}
+  tbody tr:last-child td{border-bottom:none}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:.86rem}
+  tbody tr:hover td{background:var(--surface-2)}
+  .row-strong td{font-weight:600;color:var(--ink)}
+  .row-strong td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
+
+  pre{margin:1.3rem 0;padding:1.1rem 1.2rem;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);border-left:2px solid var(--accent);overflow-x:auto;font-family:var(--f-mono);font-size:.82rem;line-height:1.6;color:var(--ink)}
+  pre.tree{white-space:pre;color:var(--muted)}
+  code{font-family:var(--f-mono);font-size:.86em;background:var(--surface-2);padding:.1em .38em;border-radius:5px;border:1px solid var(--line)}
+  pre code{background:none;border:none;padding:0;font-size:1em}
+
+  .equation{margin:1.3rem 0;padding:1.2rem 1.3rem;border-radius:12px;background:var(--surface);border:1px solid var(--line);font-family:var(--f-display);font-size:1.08rem;text-align:center;overflow-x:auto;color:var(--ink)}
+  .equation .var{font-style:italic}
+  .equation .where{display:block;margin-top:.6rem;font-family:var(--f-mono);font-size:.76rem;color:var(--muted);font-style:normal}
+  .frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;margin:0 .25em}
+  .frac>span:first-child{border-bottom:1.5px solid currentColor;padding:0 .35em}
+  .frac>span:last-child{padding:.05em .35em 0}
+
+  .grid{display:grid;gap:1rem;margin:1.4rem 0}
+  .grid.two{grid-template-columns:repeat(2,1fr)}
+  .grid.three{grid-template-columns:repeat(3,1fr)}
+  .grid.four{grid-template-columns:repeat(4,1fr)}
+  @media (max-width:760px){ .grid.three,.grid.four{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:520px){ .grid.two,.grid.three,.grid.four{grid-template-columns:1fr} }
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.15rem}
+  .card .k{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:.4rem}
+  .card .v{font-size:.92rem;color:var(--ink)}
+  .card .v strong{display:block;font-family:var(--f-display);font-size:1.15rem;font-weight:600;margin-bottom:.15rem}
+
+  .badge{display:inline-block;font-family:var(--f-mono);font-size:.68rem;letter-spacing:.05em;padding:.15em .55em;border-radius:5px;border:1px solid currentColor;vertical-align:middle}
+  .badge.g{color:var(--ok)}
+  .badge.a{color:var(--warn)}
+  .badge.r{color:var(--crit)}
+
+  .foot{padding:2.5rem 0 0;color:var(--faint);font-family:var(--f-mono);font-size:.76rem;text-align:center;border-bottom:none}
+  :where(a,button):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+</style>
+
+<header class="top">
+  <div class="brand"><span class="dot"></span> Technical Report</div>
+  <nav>
+    <a href="#sec3">Architecture</a>
+    <a href="#sec4">IFS-R</a>
+    <a href="#sec5">SWCSA</a>
+    <a href="#sec14">Results</a>
+    <button class="toggle" id="themeToggle" type="button" aria-label="Toggle colour theme">Theme</button>
+  </nav>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="eyebrow">Generative AI Security &nbsp;·&nbsp; Zero-Trust</div>
+    <h1>Multi-Modal Prompt Injection Defense Gateway</h1>
+    <p class="lede">A zero-trust inline security proxy that sits between untrusted input and foundation models — isolating instructions from data, tracking conversational drift over time, and sanitising hostile signals hidden in images and audio, all with no model retraining.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="n">&lt;4.1%</div><div class="l">Direct injection ASR</div></div>
+      <div class="stat"><div class="n">~42 ms</div><div class="l">Text preprocessing</div></div>
+      <div class="stat"><div class="n">4-layer</div><div class="l">Defense pipeline</div></div>
+      <div class="stat"><div class="n">&lt;2.3%</div><div class="l">False positive rate</div></div>
+    </div>
+    <div class="meta-line">Python 3.10+ / FastAPI &nbsp;·&nbsp; Sentence-Transformers + FAISS &nbsp;·&nbsp; OpenCV / Tesseract / Librosa &nbsp;·&nbsp; Redis &nbsp;·&nbsp; LiteLLM</div>
+
+    <div class="toc">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#sec1"><span class="num">01</span><span>Overview &amp; Executive Summary</span></a></li>
+        <li><a href="#sec2"><span class="num">02</span><span>Why This Project</span></a></li>
+        <li><a href="#sec3"><span class="num">03</span><span>Zero-Trust Proxy Architecture</span></a></li>
+        <li><a href="#sec4"><span class="num">04</span><span>IFS-R Module</span></a></li>
+        <li><a href="#sec5"><span class="num">05</span><span>SWCSA Module</span></a></li>
+        <li><a href="#sec6"><span class="num">06</span><span>Multimodal Preprocessing</span></a></li>
+        <li><a href="#sec7"><span class="num">07</span><span>Active Overwriting Engine</span></a></li>
+        <li><a href="#sec8"><span class="num">08</span><span>Key Features</span></a></li>
+        <li><a href="#sec9"><span class="num">09</span><span>Data Pipeline &amp; Schema</span></a></li>
+        <li><a href="#sec10"><span class="num">10</span><span>API Endpoints</span></a></li>
+        <li><a href="#sec11"><span class="num">11</span><span>Attack Taxonomy</span></a></li>
+        <li><a href="#sec12"><span class="num">12</span><span>Testing Strategy</span></a></li>
+        <li><a href="#sec13"><span class="num">13</span><span>Design Decisions &amp; Trade-offs</span></a></li>
+        <li><a href="#sec14"><span class="num">14</span><span>Performance &amp; Evaluation</span></a></li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <section id="sec1">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Overview &amp; Executive Summary</h2></div>
+    <div class="prose">
+      <p><strong>MPI-DG</strong> is an inline, multi-stage, zero-trust security proxy that intercepts requests before they reach a foundation model and validates responses before egress. It defends against <strong>direct, indirect, multi-turn, and multimodal</strong> prompt injection without retraining the underlying LLM or MLLM.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr><td><strong>Primary focus</strong></td><td>Zero-trust inline security proxy against direct, indirect, multi-turn, and multimodal prompt injection</td></tr>
+          <tr><td><strong>Target models</strong></td><td>LLMs &amp; MLLMs — GPT-4o, Gemini, Mistral, LLaVA, SpeechGPT</td></tr>
+          <tr><td><strong>Core innovations</strong></td><td>IFS-R structured-query isolation · SWCSA temporal risk &amp; agent-drift tracking · multimodal frequency-domain / OCR sanitization · Active Overwriting via dynamic suffix optimisation</td></tr>
+          <tr><td><strong>Theoretical grounding</strong></td><td>StruQ (USENIX Security '25), Temporal Context Awareness ('25), Agent Drift ('26), SecAlign (Meta / UC Berkeley '25), Mind-Mapping Visual Injection (MDPI '25), Audio Jailbreaks (IEEE '25)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section id="sec2">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Why This Project</h2></div>
+    <div class="prose">
+      <ul>
+        <li><strong>The generative-AI security paradox</strong> — LLMs are trained to follow natural-language instructions flexibly, so they cannot intrinsically distinguish legitimate developer system instructions from untrusted user-supplied data payloads.</li>
+        <li><strong>Traditional boundary defenses fail</strong> — keyword blocklists, naive prompt wrapping, and regex all break against semantic paraphrasing, multilingual jailbreaks, adversarial suffix optimisation (GCG), and multi-turn manipulation.</li>
+        <li><strong>The threat horizon is multimodal</strong> — malicious commands now hide inside mind-maps, flowcharts, and steganographic noise that trigger during image parsing, and inside token-level adversarial audio perturbations that hijack speech-to-token encoders without alerting a human listener.</li>
+        <li><strong>Enterprise imperatives</strong> — safe agent deployment requires preventing unauthorised tool calling, prompt leakage, and data exfiltration without touching foundation-model weights.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section id="sec3">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Zero-Trust Proxy Architecture</h2></div>
+    <div class="prose">
+      <p>The gateway functions as an inline, multi-stage, zero-trust security proxy. Input of any modality is normalised, isolated into a structured envelope, scored for temporal risk, optionally overwritten with a defensive suffix, dispatched to the model, and finally checked for leakage before egress.</p>
+    </div>
+
+    <figure>
+      <div class="fig-frame">
+        <svg viewBox="0 0 900 900" role="img" aria-label="Four-layer defense pipeline. Layer 1, multimodal preprocessing: a modality router sends images to an OCR extractor and denoiser, audio to a spectral filter, and raw text to a text preprocessor. Layer 2, core defense engines: the IFS-R module wraps all inputs in dynamic nonce delimiters to disambiguate instruction from data, then the SWCSA module applies a sliding-window memory, progressive risk score, and agent-stability-index drift monitor. Layer 3, attack validation and active overwriting: if the risk score is at or above threshold the request is routed through active overwrite with a SecAlign DPO policy suffix, otherwise it goes straight to the target LLM. Layer 4, response guard: an output guard checks system-prompt canary tokens and redacts sensitive data before returning a sanitized response to the client.">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="d-arrowhead"/></marker>
+            <marker id="aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="d-arrowhead-accent"/></marker>
+          </defs>
+
+          <rect class="d-box" x="300" y="16" width="300" height="52" rx="9"/>
+          <text class="d-sub" x="450" y="46" text-anchor="middle">client · untrusted text / image / audio</text>
+          <path class="d-flow" d="M450 68 L450 100" marker-end="url(#ah)"/>
+
+          <rect class="d-band" x="8" y="106" width="884" height="180" rx="12"/>
+          <text class="d-bandlabel" x="30" y="132">Layer 1 — Multimodal Preprocessing &amp; Normalization</text>
+          <polygon class="d-diamond" points="450,146 520,178 450,210 380,178"/>
+          <text class="d-title" x="450" y="182" text-anchor="middle">Modality router</text>
+          <rect class="d-box" x="40" y="222" width="260" height="52" rx="9"/>
+          <text class="d-sub" x="170" y="244" text-anchor="middle">Image normalizer + OCR</text>
+          <text class="d-sub" x="170" y="260" text-anchor="middle">denoise · mind-map node isolate</text>
+          <rect class="d-box" x="320" y="222" width="260" height="52" rx="9"/>
+          <text class="d-sub" x="450" y="244" text-anchor="middle">Acoustic processor</text>
+          <text class="d-sub" x="450" y="260" text-anchor="middle">spectral filter · S2T boundary</text>
+          <rect class="d-box" x="600" y="222" width="260" height="52" rx="9"/>
+          <text class="d-sub" x="730" y="252" text-anchor="middle">Text preprocessor</text>
+          <path class="d-flow" d="M380 178 L170 178 L170 222" marker-end="url(#ah)"/>
+          <path class="d-flow" d="M450 210 L450 222" marker-end="url(#ah)"/>
+          <path class="d-flow" d="M520 178 L730 178 L730 222" marker-end="url(#ah)"/>
+
+          <path class="d-flow" d="M450 286 L450 316" marker-end="url(#ah)"/>
+
+          <rect class="d-band" x="8" y="322" width="884" height="196" rx="12"/>
+          <text class="d-bandlabel" x="30" y="348">Layer 2 — Core Defense Engines</text>
+          <rect class="d-box-accent" x="120" y="362" width="660" height="60" rx="9"/>
+          <text class="d-title" x="450" y="386" text-anchor="middle">IFS-R · Structured Query Isolation</text>
+          <text class="d-sub" x="450" y="406" text-anchor="middle">dynamic nonce delimiters · instruction–data disambiguation</text>
+          <path class="d-flow-accent" d="M450 422 L450 452" marker-end="url(#aha)"/>
+          <rect class="d-box-accent" x="120" y="452" width="660" height="60" rx="9"/>
+          <text class="d-title" x="450" y="476" text-anchor="middle">SWCSA · Context &amp; Temporal Analysis</text>
+          <text class="d-sub" x="450" y="496" text-anchor="middle">sliding window memory · progressive risk score · ASI drift monitor</text>
+
+          <path class="d-flow" d="M450 518 L450 548" marker-end="url(#ah)"/>
+
+          <rect class="d-band" x="8" y="554" width="884" height="150" rx="12"/>
+          <text class="d-bandlabel" x="30" y="580">Layer 3 — Attack Validation &amp; Active Overwriting</text>
+          <polygon class="d-diamond" points="450,594 545,624 450,654 355,624"/>
+          <text class="d-title" x="450" y="622" text-anchor="middle">Risk &ge; threshold?</text>
+          <text class="d-title" x="450" y="638" text-anchor="middle"> </text>
+          <rect class="d-box-accent" x="70" y="600" width="230" height="48" rx="9"/>
+          <text class="d-sub" x="185" y="628" text-anchor="middle">Active Overwrite · SecAlign DPO suffix</text>
+          <rect class="d-box" x="600" y="600" width="240" height="48" rx="9"/>
+          <text class="d-sub" x="720" y="628" text-anchor="middle">Target LLM / MLLM engine</text>
+          <path class="d-flow-accent" d="M355 624 L300 624" marker-end="url(#aha)"/>
+          <text class="d-lbl-em" x="305" y="612">malicious</text>
+          <path class="d-flow" d="M545 624 L600 624" marker-end="url(#ah)"/>
+          <text class="d-lbl" x="548" y="612">clean</text>
+          <path class="d-flow-accent" d="M185 648 L185 672 L720 672 L720 648" marker-end="url(#aha)"/>
+
+          <path class="d-flow" d="M450 704 L450 734" marker-end="url(#ah)"/>
+
+          <rect class="d-band" x="8" y="740" width="884" height="120" rx="12"/>
+          <text class="d-bandlabel" x="30" y="766">Layer 4 — Response Guard &amp; Watermark Verification</text>
+          <rect class="d-box" x="120" y="780" width="660" height="60" rx="9"/>
+          <text class="d-title" x="450" y="804" text-anchor="middle">Output guard &amp; leakage detector</text>
+          <text class="d-sub" x="450" y="824" text-anchor="middle">system-prompt canary verification · sensitive-data redaction → sanitized response</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 1 — Four-layer inline pipeline.</b> Accent boxes are the two core defense engines (IFS-R, SWCSA) and the Active Overwrite branch. Every request is validated on the way in and every response on the way out.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 4 -->
+  <section id="sec4">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">IFS-R Module — Instruction-Feedback-Structure Sanitization</h2></div>
+    <div class="prose">
+      <p><strong>Theoretical foundation:</strong> <em>StruQ: Defending Against Prompt Injection with Structured Queries</em> (USENIX Security 2025).</p>
+      <h4>Mechanism</h4>
+      <ul>
+        <li>Transforms unstructured prompt payloads into strict schema envelopes using cryptographically random nonce delimiters: <code>&lt;data_slot id="uuid_nonce"&gt;…&lt;/data_slot&gt;</code>.</li>
+        <li>Employs Structured Instruction Tuning (SIT) syntax to mathematically isolate user data from executable control logic.</li>
+        <li>Neutralises prompt-escape sequences (<code>&lt;/system&gt;</code>, <code>\n\nAssistant:</code>) by escaping delimiter collisions at the boundary.</li>
+      </ul>
+    </div>
+    <div class="callout">
+      <span class="tag">Why dynamic nonces</span>
+      <p>Static delimiters like <code>"""</code> or <code>###</code> are trivially guessed and escaped by an adversarial prompt. A fresh per-turn nonce tag makes tag collision mathematically infeasible for the attacker.</p>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section id="sec5">
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">SWCSA Module — Sliding Window Context Semantic Analysis</h2></div>
+    <div class="prose">
+      <p><strong>Theoretical foundation:</strong> <em>Temporal Context Awareness</em> (2025) and <em>Agent Drift: Quantifying Behavioral Degradation</em> (arXiv:2601.04170).</p>
+      <p>SWCSA maintains an in-memory sliding window of the last <span class="var">K</span> conversation turns per session and halts multi-turn "crescendo" attacks that split malicious intent into individually benign prompts.</p>
+    </div>
+    <h4>Agent Stability Index (ASI)</h4>
+    <div class="equation">
+      ASI<sub><span class="var">t</span></sub> = cos&#8202;(&#8202;<span class="var">E&#8407;</span><sub>system_intent</sub>,&#8202; <span class="var">E&#8407;</span><sub>turn_context</sub>&#8202;)
+      <span class="where">cosine similarity between the system-intent embedding and the current turn's context embedding — a falling ASI signals semantic degradation</span>
+    </div>
+    <h4>Exponentially decaying cumulative risk</h4>
+    <div class="equation">
+      <span class="var">R&#8348;</span> = <span class="var">&alpha;</span> &middot; <span class="var">R</span><sub><span class="var">t</span>&minus;1</sub> + (1 &minus; <span class="var">&alpha;</span>) &middot; ThreatScore(Turn<sub><span class="var">t</span></sub>)
+      <span class="where">accumulates threat across turns so a slow "salami-slicing" jailbreak still crosses the cutoff</span>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section id="sec6">
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title">Multimodal Preprocessing &amp; Frequency Filter Layer</h2></div>
+    <div class="prose">
+      <p><strong>Theoretical foundation:</strong> <em>Mind Mapping Prompt Injection</em> (MDPI Electronics 2025) and <em>Audio Jailbreak Attacks in SpeechGPT</em> (IEEE 2025).</p>
+    </div>
+    <div class="grid two">
+      <div class="card">
+        <div class="k">Vision defense</div>
+        <div class="v">
+          <ul>
+            <li>Bilateral spatial filtering and normalisation to eliminate high-frequency adversarial perturbations.</li>
+            <li>OCR node parsing to detect and strip covert prompt injections inside diagrams, flowcharts, and mind-maps.</li>
+            <li>Adaptive thresholding, morphological noise removal, and hierarchical node-graph parsing against faint-colour and branch-node evasion.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="k">Acoustic defense</div>
+        <div class="v">
+          <ul>
+            <li>Frequency-domain bandpass filtering (Butterworth) to strip ultrasonic / sub-audible adversarial trigger signals.</li>
+            <li>Speech-to-token boundary checks targeting speech-to-token encoders such as SpeechGPT.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section id="sec7">
+    <div class="sec-head"><span class="sec-num">07</span><h2 class="sec-title">Active Overwriting &amp; Dynamic Policy Enforcement</h2></div>
+    <div class="prose">
+      <p><strong>Theoretical foundation:</strong> <em>SecAlign</em> (Meta / UC Berkeley 2025) and <em>Automatic System Prompt Engineering</em> (2025).</p>
+      <ul>
+        <li>K-Means clustering on the prompt representation space classifies attack-intent type.</li>
+        <li>When borderline risk is identified, an optimised defensive suffix is injected dynamically into the system context — forcing the model to adhere to safety alignments <em>without</em> rejecting benign queries.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section id="sec8">
+    <div class="sec-head"><span class="sec-num">08</span><h2 class="sec-title">Key Features</h2></div>
+    <div class="grid two">
+      <div class="card"><div class="k">Tri-modal shielding</div><div class="v">Unified defense covering text, images / diagrams, and audio input.</div></div>
+      <div class="card"><div class="k">Zero retraining overhead</div><div class="v">Portable proxy layer securing closed-source (GPT-4o, Claude, Gemini) and open-source (Llama 3, Mistral, LLaVA) models alike.</div></div>
+      <div class="card"><div class="k">Temporal multi-turn defense</div><div class="v">Active prevention of multi-step jailbreaks and conversational drift.</div></div>
+      <div class="card"><div class="k">Resilient data isolation</div><div class="v">IFS-R eliminates prompt confusion via dynamic cryptographic delimiter envelopes.</div></div>
+      <div class="card"><div class="k">Bidirectional egress monitoring</div><div class="v">Blocks system-prompt leakage, canary-token exfiltration, and SSRF via markdown rendering.</div></div>
+      <div class="card"><div class="k">Sub-50 ms text latency</div><div class="v">Optimised vector similarity, caching, and async pipelining.</div></div>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section id="sec9">
+    <div class="sec-head"><span class="sec-num">09</span><h2 class="sec-title">Data Pipeline &amp; Schema</h2></div>
+    <h4>Data-flow pipeline</h4>
+    <pre class="tree">[client request: text / image / audio]
+        │
+        ▼  Layer 1  input extraction
+        ▼  Layer 2  modality normalization  → image denoise &amp; OCR + audio filter
+        ▼  Layer 3  IFS-R serialization     → structured delimiter wrapping
+        ▼  Layer 4  SWCSA context scoring   → Redis sliding window + ASI calculation
+        ▼  Layer 5  model proxy             → secured query dispatched to target LLM
+        ▼  Layer 6  egress guard            → canary-token check &amp; regex scrubbing
+        ▼
+[client response]</pre>
+    <h4>Gateway JSON schema — <code>GatewayInferencePayload</code></h4>
+    <pre><code>{
+  "session_id":  { "type": "string", "format": "uuid" },
+  "turn_index":  { "type": "integer", "minimum": 1 },
+  "input_payload": {
+    "text":         { "type": "string" },
+    "image_base64": { "type": ["string", "null"] },
+    "audio_base64": { "type": ["string", "null"] }
+  },
+  "security_metadata": {
+    "asi_stability_score":   { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "cumulative_risk_score": { "type": "number", "minimum": 0.0, "maximum": 100.0 },
+    "detected_attack_vectors": { "type": "array", "items": { "type": "string" } }
+  }
+}</code></pre>
+  </section>
+
+  <!-- 10 -->
+  <section id="sec10">
+    <div class="sec-head"><span class="sec-num">10</span><h2 class="sec-title">API Endpoints</h2></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>POST</code></td><td><code>/api/v1/secure/chat</code></td><td>Main secure proxy for chat / completions → cleaned response + security telemetry</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/v1/sanitize/multimodal</code></td><td>Standalone preprocessing for image / audio → normalised transcript &amp; cleaned image</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/v1/session/{id}/drift</code></td><td>Query the session's Agent Stability Index → rolling risk history, ASI score, turn logs</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/v1/admin/rules/override</code></td><td>Dynamically update defense thresholds and suffixes</td></tr>
+          <tr><td><code>GET</code></td><td><code>/healthz</code></td><td>Health check for gateway, Redis, and upstream models</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section id="sec11">
+    <div class="sec-head"><span class="sec-num">11</span><h2 class="sec-title">Attack Taxonomy &amp; Threat Vectors Covered</h2></div>
+    <figure>
+      <div class="fig-frame">
+        <svg viewBox="0 0 900 420" role="img" aria-label="Prompt injection threat taxonomy tree with four branches. Direct injection: jailbreaks (DAN), prefix injection, Base64 / cipher. Indirect injection: poisoned web documents, malicious PDFs, SQL / tool hijack. Multi-turn (temporal context awareness): crescendo attack, salami slicing, semantic drift. Multi-modal attack: mind-map visual injection, audio perturbation, OCR steganography.">
+          <defs><marker id="ahx" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="d-arrowhead"/></marker></defs>
+          <rect class="d-box-accent" x="300" y="16" width="300" height="46" rx="9"/>
+          <text class="d-title" x="450" y="44" text-anchor="middle">Prompt Injection Threat Taxonomy</text>
+          <path class="d-flow" d="M450 62 L450 84 M120 84 L780 84 M120 84 L120 110 M340 84 L340 110 M560 84 L560 110 M780 84 L780 110" marker-end="url(#ahx)"/>
+
+          <rect class="d-box" x="30" y="110" width="185" height="46" rx="9"/>
+          <text class="d-title" x="122" y="138" text-anchor="middle">Direct Injection</text>
+          <rect class="d-box" x="248" y="110" width="185" height="46" rx="9"/>
+          <text class="d-title" x="340" y="138" text-anchor="middle">Indirect Injection</text>
+          <rect class="d-box" x="468" y="110" width="185" height="46" rx="9"/>
+          <text class="d-title" x="560" y="138" text-anchor="middle">Multi-Turn (TCA)</text>
+          <rect class="d-box" x="688" y="110" width="185" height="46" rx="9"/>
+          <text class="d-title" x="780" y="138" text-anchor="middle">Multi-Modal Attack</text>
+
+          <text class="d-sub" x="122" y="196" text-anchor="middle">jailbreaks (DAN)</text>
+          <text class="d-sub" x="122" y="216" text-anchor="middle">prefix injection</text>
+          <text class="d-sub" x="122" y="236" text-anchor="middle">Base64 / cipher</text>
+          <text class="d-sub" x="340" y="196" text-anchor="middle">poisoned web doc</text>
+          <text class="d-sub" x="340" y="216" text-anchor="middle">malicious PDF</text>
+          <text class="d-sub" x="340" y="236" text-anchor="middle">SQL / tool hijack</text>
+          <text class="d-sub" x="560" y="196" text-anchor="middle">crescendo attack</text>
+          <text class="d-sub" x="560" y="216" text-anchor="middle">salami slicing</text>
+          <text class="d-sub" x="560" y="236" text-anchor="middle">semantic drift</text>
+          <text class="d-sub" x="780" y="196" text-anchor="middle">mind-map visual</text>
+          <text class="d-sub" x="780" y="216" text-anchor="middle">audio perturbation</text>
+          <text class="d-sub" x="780" y="236" text-anchor="middle">OCR steganography</text>
+
+          <path class="d-flow" d="M122 156 L122 176 M340 156 L340 176 M560 156 L560 176 M780 156 L780 176"/>
+        </svg>
+      </div>
+      <figcaption><b>Figure 2 — Threat taxonomy.</b> The gateway maps each branch to a defense: IFS-R for direct and indirect injection, SWCSA for multi-turn drift, and the preprocessing layer for multimodal vectors, with the egress guard covering leakage and exfiltration.</figcaption>
+    </figure>
+    <ol class="body-list">
+      <li><strong>Direct injection (jailbreaking)</strong> — explicit adversarial commands attempting to bypass system safety constraints.</li>
+      <li><strong>Indirect instruction injection</strong> — third-party data carrying stealth instructions that hijack downstream processing.</li>
+      <li><strong>Multi-turn semantic drift</strong> — progressive conversational manipulation designed to bypass single-turn filters.</li>
+      <li><strong>Visual diagram injection</strong> — instructions concealed inside diagram nodes and mind maps.</li>
+      <li><strong>Acoustic token injection</strong> — subtle audio perturbations manipulating speech-to-token embeddings.</li>
+      <li><strong>Egress leakage / exfiltration</strong> — attacks rendering images or markdown links to transmit system secrets externally.</li>
+    </ol>
+  </section>
+
+  <!-- 12 -->
+  <section id="sec12">
+    <div class="sec-head"><span class="sec-num">12</span><h2 class="sec-title">Testing Strategy</h2></div>
+    <div class="grid two">
+      <div class="card"><div class="k">Unit — tests/unit/</div><div class="v">Delimiter-collision tests (malicious tag-closing neutralised by IFS-R); signal-processing tests (Butterworth cutoffs, bilateral filter noise reduction).</div></div>
+      <div class="card"><div class="k">Integration — tests/integration/</div><div class="v">Multi-turn state tests — session lifecycle, Redis TTL expiration, cumulative risk-score computation across consecutive turns.</div></div>
+      <div class="card"><div class="k">Adversarial — direct</div><div class="v">DAN, oppositional roleplay, cipher attacks, Base64 / Rot13 obfuscation.</div></div>
+      <div class="card"><div class="k">Adversarial — multimodal &amp; optimisation</div><div class="v">Mind-map diagrams with embedded system overrides; token-level adversarial audio; Greedy Coordinate Gradient (GCG) suffix benchmarks.</div></div>
+    </div>
+  </section>
+
+  <!-- 13 -->
+  <section id="sec13">
+    <div class="sec-head"><span class="sec-num">13</span><h2 class="sec-title">Key Design Decisions &amp; Trade-offs</h2></div>
+    <div class="grid two">
+      <div class="card"><div class="k">Inline proxy vs fine-tuning</div><div class="v">An inline gateway gives instant zero-downtime deployment, supports proprietary closed-source models, and allows immediate rule updates without GPU retraining cycles.</div></div>
+      <div class="card"><div class="k">Cryptographic random delimiters</div><div class="v">Per-turn nonce tags instead of static markers — static delimiters are guessed and escaped; dynamic nonces make collision mathematically impossible.</div></div>
+      <div class="card"><div class="k">Rolling window vs full graph</div><div class="v">Fixed-size sliding window (K = 5) with exponential risk decay keeps Redis memory and vector-calculation latency O(1) while staying sensitive to gradual drift.</div></div>
+      <div class="card"><div class="k">Dual-threshold scoring</div><div class="v">Low-to-medium risk queries are encapsulated in IFS-R rather than rejected, so technical queries (coding, security research) are not falsely blocked.</div></div>
+    </div>
+    <h4>Challenges faced &amp; engineering solutions</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Challenge</th><th>Impact</th><th>Solution</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Over-defense &amp; false positives</strong></td><td>Technical queries blocked falsely</td><td>Dual-threshold scoring — low/medium risk wrapped in IFS-R without rejection</td></tr>
+          <tr><td><strong>Multimodal processing latency</strong></td><td>OCR + acoustic filtering added &gt; 350 ms</td><td>FAISS in-memory indexing, lightweight async OCR threads, PyMuPDF hardware-accelerated decode</td></tr>
+          <tr><td><strong>Multi-turn "salami" attacks</strong></td><td>Payloads split over many innocent messages</td><td>SWCSA module with Temporal Context Awareness and cumulative risk decay</td></tr>
+          <tr><td><strong>OCR evasion via complex visuals</strong></td><td>Adversarial text in faint colours / branch nodes</td><td>Adaptive thresholding, morphological noise removal, hierarchical node-graph parsing</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 14 -->
+  <section id="sec14">
+    <div class="sec-head"><span class="sec-num">14</span><h2 class="sec-title">Performance &amp; Evaluation Metrics</h2></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Metric / attack category</th><th class="num">Baseline (no gateway)</th><th class="num">With MPI-DG</th></tr></thead>
+        <tbody>
+          <tr class="row-strong"><td>Direct prompt injection ASR</td><td class="num">84.2%</td><td class="num">&lt; 4.1%</td></tr>
+          <tr><td>Multi-turn temporal jailbreak ASR</td><td class="num">76.5%</td><td class="num">&lt; 6.8%</td></tr>
+          <tr><td>Visual / mind-map indirect injection ASR</td><td class="num">89.0%</td><td class="num">&lt; 7.5%</td></tr>
+          <tr><td>Audio token-level jailbreak ASR</td><td class="num">89.0%</td><td class="num">&lt; 5.2%</td></tr>
+          <tr><td>Average preprocessing overhead</td><td class="num">0 ms</td><td class="num">~42 ms text / ~180 ms multimodal</td></tr>
+          <tr><td>False positive rate (benign benchmarks)</td><td class="num">0%</td><td class="num">&lt; 2.3%</td></tr>
+        </tbody>
+        <caption>ASR = Attack Success Rate. Lower is better for every row except throughput.</caption>
+      </table>
+    </div>
+    <h4>Tech stack</h4>
+    <div class="grid three">
+      <div class="card"><div class="k">Gateway &amp; API</div><div class="v">Python 3.10+, FastAPI, Uvicorn, Pydantic v2, AsyncIO</div></div>
+      <div class="card"><div class="k">Vectors &amp; embeddings</div><div class="v">Sentence-Transformers (<code>all-MiniLM-L6-v2</code>, <code>bge-large-en-v1.5</code>), FAISS index</div></div>
+      <div class="card"><div class="k">Multimodal</div><div class="v">OpenCV, Pillow, PyMuPDF, Tesseract / EasyOCR, Librosa, Torchaudio</div></div>
+      <div class="card"><div class="k">Session state</div><div class="v">Redis — stateful sliding-window contexts, TTL eviction</div></div>
+      <div class="card"><div class="k">LLM proxy</div><div class="v">LiteLLM, LangChain / LlamaIndex core interfaces</div></div>
+      <div class="card"><div class="k">Testing</div><div class="v">PyTest, Locust, GCG attack generator, PyRIT</div></div>
+    </div>
+    <h4>Run it</h4>
+    <pre><code>docker run -d -p 6379:6379 --name redis-gateway redis:alpine
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload</code></pre>
+  </section>
+
+  <p class="foot">MPI-DG · Multi-Modal Prompt Injection Defense Gateway · Technical Report · 2026</p>
+</main>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('themeToggle');
+    function current(){
+      return root.getAttribute('data-theme') ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    }
+    btn.addEventListener('click', function(){
+      var next = current() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('mpidg-theme', next); } catch (e) {}
+    });
+    try {
+      var saved = localStorage.getItem('mpidg-theme');
+      if (saved) root.setAttribute('data-theme', saved);
+    } catch (e) {}
+  })();
+</script>

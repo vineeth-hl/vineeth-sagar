@@ -1,0 +1,623 @@
+<title>Hybrid P2P-Cloud Anonymous Transfer Engine</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    --paper:#f6f5fa;
+    --surface:#ffffff;
+    --surface-2:#eeecf6;
+    --ink:#1b1a24;
+    --muted:#585670;
+    --faint:#8b88a3;
+    --line:#dcd9e8;
+    --accent:#5b46d9;
+    --accent-soft:#e9e5fb;
+    --warn:#9a5f0d;
+    --crit:#a63b2b;
+    --ok:#1f7a43;
+    --shadow:0 1px 2px rgba(22,20,32,.04), 0 8px 24px -12px rgba(22,20,32,.16);
+
+    --f-display:"Fraunces", Georgia, "Times New Roman", serif;
+    --f-body:"IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+    --measure:66ch;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#101019;
+      --surface:#181722;
+      --surface-2:#1e1c2c;
+      --ink:#e9e7f2;
+      --muted:#a4a1ba;
+      --faint:#726f8b;
+      --line:#2e2b40;
+      --accent:#a897f5;
+      --accent-soft:#201b36;
+      --warn:#d69a4e;
+      --crit:#e77762;
+      --ok:#5bbd83;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#101019;
+    --surface:#181722;
+    --surface-2:#1e1c2c;
+    --ink:#e9e7f2;
+    --muted:#a4a1ba;
+    --faint:#726f8b;
+    --line:#2e2b40;
+    --accent:#a897f5;
+    --accent-soft:#201b36;
+    --warn:#d69a4e;
+    --crit:#e77762;
+    --ok:#5bbd83;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.55);
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+  header.top{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem clamp(1rem,4vw,2.4rem);background:color-mix(in srgb, var(--paper) 86%, transparent);backdrop-filter:saturate(140%) blur(8px);border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:.6rem;font-family:var(--f-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  .top nav{display:flex;gap:.4rem;align-items:center}
+  .top nav a{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;color:var(--muted);text-decoration:none;padding:.3rem .55rem;border-radius:6px}
+  .top nav a:hover{color:var(--ink);background:var(--surface-2)}
+  .toggle{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;background:var(--surface);color:var(--muted);border:1px solid var(--line);padding:.35rem .6rem;border-radius:7px;cursor:pointer}
+  .toggle:hover{color:var(--ink);border-color:var(--accent)}
+
+  main{max-width:960px;margin:0 auto;padding:0 clamp(1rem,4vw,2.4rem) 6rem}
+  .prose{max-width:var(--measure)}
+  p{margin:0 0 1rem}
+  a{color:var(--accent);text-underline-offset:2px}
+
+  .hero{padding:clamp(2.6rem,7vw,5rem) 0 clamp(1.8rem,4vw,3rem);border-bottom:1px solid var(--line);animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+  @media (prefers-reduced-motion: reduce){ .hero{animation:none} }
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .eyebrow{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:1.2rem;display:flex;align-items:center;gap:.7rem}
+  .eyebrow::before{content:"";width:34px;height:1px;background:var(--accent)}
+  h1{font-family:var(--f-display);font-weight:600;font-size:clamp(2rem,6vw,3.4rem);line-height:1.04;letter-spacing:-.01em;margin:0 0 1rem;text-wrap:balance}
+  .lede{font-size:clamp(1.05rem,2.4vw,1.28rem);color:var(--muted);max-width:56ch;margin-bottom:2rem}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .stat{background:var(--surface);padding:1.1rem 1.15rem}
+  .stat .n{font-family:var(--f-display);font-weight:600;font-size:1.6rem;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .stat .l{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-top:.5rem}
+  .meta-line{margin-top:1.5rem;font-family:var(--f-mono);font-size:.74rem;color:var(--faint);letter-spacing:.04em}
+  @media (max-width:680px){ .stats{grid-template-columns:repeat(2,1fr)} }
+
+  .toc{margin:2.5rem 0 0;padding:1.4rem 1.5rem;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+  .toc h2{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:0 0 1rem}
+  .toc ol{margin:0;padding:0;list-style:none;columns:2;column-gap:2.5rem}
+  .toc li{margin:0 0 .5rem;break-inside:avoid}
+  .toc a{display:flex;gap:.7rem;text-decoration:none;color:var(--ink);font-size:.92rem}
+  .toc a:hover{color:var(--accent)}
+  .toc a .num{font-family:var(--f-mono);font-size:.78rem;color:var(--faint);min-width:1.4rem}
+  @media (max-width:640px){ .toc ol{columns:1} }
+
+  section{padding:clamp(2.4rem,5vw,3.6rem) 0;border-bottom:1px solid var(--line)}
+  .sec-head{margin-bottom:1.6rem}
+  .sec-num{font-family:var(--f-mono);font-size:.76rem;letter-spacing:.14em;color:var(--accent);display:block;margin-bottom:.5rem}
+  h2.sec-title{font-family:var(--f-display);font-weight:600;font-size:clamp(1.5rem,3.6vw,2.1rem);line-height:1.1;letter-spacing:-.01em;margin:0;text-wrap:balance}
+  h3{font-family:var(--f-body);font-weight:600;font-size:1.06rem;margin:2.2rem 0 .7rem;color:var(--ink);display:flex;align-items:baseline;gap:.6rem}
+  h3 .h3num{font-family:var(--f-mono);font-size:.8rem;color:var(--accent);font-weight:500}
+  h4{font-family:var(--f-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:1.6rem 0 .6rem}
+
+  ul,ol.body-list{margin:0 0 1rem;padding-left:1.2rem}
+  li{margin:.35rem 0}
+  strong{font-weight:600;color:var(--ink)}
+  .prose ul li::marker{color:var(--accent)}
+
+  .callout{border-left:2px solid var(--accent);background:var(--accent-soft);padding:1rem 1.2rem;border-radius:0 10px 10px 0;margin:1.4rem 0;max-width:var(--measure)}
+  .callout p:last-child{margin:0}
+  .callout .tag{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:.35rem}
+
+  figure{margin:2rem 0;padding:0}
+  .fig-frame{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:clamp(1rem,3vw,1.8rem);box-shadow:var(--shadow);overflow-x:auto}
+  figure svg{display:block;width:100%;height:auto;min-width:540px;color:var(--ink)}
+  figcaption{margin-top:.9rem;font-size:.86rem;color:var(--muted);font-family:var(--f-body);max-width:var(--measure)}
+  figcaption b{color:var(--ink);font-weight:600}
+
+  .d-band{fill:var(--surface-2);stroke:var(--line);stroke-width:1}
+  .d-bandlabel{fill:var(--faint);font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+  .d-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+  .d-box-accent{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.75}
+  .d-title{fill:var(--ink);font-family:var(--f-body);font-size:13px;font-weight:600}
+  .d-sub{fill:var(--muted);font-family:var(--f-mono);font-size:11px}
+  .d-flow{fill:none;stroke:var(--muted);stroke-width:1.5}
+  .d-flow-accent{fill:none;stroke:var(--accent);stroke-width:2}
+  .d-lbl{fill:var(--muted);font-family:var(--f-mono);font-size:11px}
+  .d-lbl-em{fill:var(--accent);font-family:var(--f-mono);font-size:11px;font-weight:500}
+  .d-arrowhead{fill:var(--muted)}
+  .d-arrowhead-accent{fill:var(--accent)}
+  .d-diamond{fill:var(--surface);stroke:var(--accent);stroke-width:1.75}
+
+  .table-wrap{overflow-x:auto;margin:1.4rem 0;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:520px}
+  caption{caption-side:bottom;text-align:left;padding:.7rem .9rem;color:var(--faint);font-size:.8rem;font-family:var(--f-mono)}
+  th,td{padding:.65rem .9rem;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  thead th{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500;background:var(--surface-2)}
+  tbody tr:last-child td{border-bottom:none}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:.86rem}
+  tbody tr:hover td{background:var(--surface-2)}
+  .row-strong td{font-weight:600;color:var(--ink)}
+  .row-strong td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
+
+  pre{margin:1.3rem 0;padding:1.1rem 1.2rem;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);border-left:2px solid var(--accent);overflow-x:auto;font-family:var(--f-mono);font-size:.82rem;line-height:1.6;color:var(--ink)}
+  pre.tree{white-space:pre;color:var(--muted)}
+  code{font-family:var(--f-mono);font-size:.86em;background:var(--surface-2);padding:.1em .38em;border-radius:5px;border:1px solid var(--line)}
+  pre code{background:none;border:none;padding:0;font-size:1em}
+
+  .grid{display:grid;gap:1rem;margin:1.4rem 0}
+  .grid.two{grid-template-columns:repeat(2,1fr)}
+  .grid.three{grid-template-columns:repeat(3,1fr)}
+  .grid.four{grid-template-columns:repeat(4,1fr)}
+  @media (max-width:760px){ .grid.three,.grid.four{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:520px){ .grid.two,.grid.three,.grid.four{grid-template-columns:1fr} }
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.15rem}
+  .card .k{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:.4rem}
+  .card .v{font-size:.92rem;color:var(--ink)}
+  .card .v strong{display:block;font-family:var(--f-display);font-size:1.15rem;font-weight:600;margin-bottom:.15rem}
+  .phase{position:relative;padding-left:1.4rem}
+  .phase::before{content:"";position:absolute;left:0;top:.3rem;bottom:.3rem;width:3px;border-radius:2px;background:var(--accent)}
+
+  .badge{display:inline-block;font-family:var(--f-mono);font-size:.68rem;letter-spacing:.05em;padding:.15em .55em;border-radius:5px;border:1px solid currentColor;vertical-align:middle}
+  .badge.g{color:var(--ok)}
+  .badge.a{color:var(--warn)}
+  .badge.r{color:var(--crit)}
+
+  .foot{padding:2.5rem 0 0;color:var(--faint);font-family:var(--f-mono);font-size:.76rem;text-align:center;border-bottom:none}
+  :where(a,button):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+</style>
+
+<header class="top">
+  <div class="brand"><span class="dot"></span> Technical Report</div>
+  <nav>
+    <a href="#sec3">Architecture</a>
+    <a href="#sec4">Race Algorithm</a>
+    <a href="#sec8">Transfer Flow</a>
+    <a href="#sec12">Decisions</a>
+    <button class="toggle" id="themeToggle" type="button" aria-label="Toggle colour theme">Theme</button>
+  </nav>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="eyebrow">Distributed Systems &nbsp;·&nbsp; Privacy Engineering</div>
+    <h1>Hybrid P2P-Cloud Anonymous Transfer Engine</h1>
+    <p class="lede">A privacy-first file transfer platform that races a direct WebRTC peer-to-peer connection against a cloud relay — and then self-destructs the evidence. Hope for the best, plan for the worst, at every layer.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="n">5 s</div><div class="l">P2P race window</div></div>
+      <div class="stat"><div class="n">16 KB</div><div class="l">DataChannel chunk</div></div>
+      <div class="stat"><div class="n">3-tier</div><div class="l">Fallback hierarchy</div></div>
+      <div class="stat"><div class="n">&le; 24 h</div><div class="l">Cloud file lifespan</div></div>
+    </div>
+    <div class="meta-line">FastAPI + Uvicorn &nbsp;·&nbsp; React 18 / Vite 5 &nbsp;·&nbsp; Socket.IO signaling &nbsp;·&nbsp; AWS S3 + Lambda &nbsp;·&nbsp; Redis &nbsp;·&nbsp; Kubernetes / Coturn</div>
+
+    <div class="toc">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#sec1"><span class="num">01</span><span>Executive Summary</span></a></li>
+        <li><a href="#sec2"><span class="num">02</span><span>Why This Project</span></a></li>
+        <li><a href="#sec3"><span class="num">03</span><span>Microservices Architecture</span></a></li>
+        <li><a href="#sec4"><span class="num">04</span><span>The 5-Second Race Algorithm</span></a></li>
+        <li><a href="#sec5"><span class="num">05</span><span>Zero-RAM IndexedDB Buffering</span></a></li>
+        <li><a href="#sec6"><span class="num">06</span><span>Burn-After-Reading Destruction</span></a></li>
+        <li><a href="#sec7"><span class="num">07</span><span>Three-Tier Transfer Hierarchy</span></a></li>
+        <li><a href="#sec8"><span class="num">08</span><span>End-to-End Transfer Flow</span></a></li>
+        <li><a href="#sec9"><span class="num">09</span><span>Data Storage Schema</span></a></li>
+        <li><a href="#sec10"><span class="num">10</span><span>API &amp; Signaling Protocol</span></a></li>
+        <li><a href="#sec11"><span class="num">11</span><span>Security Architecture</span></a></li>
+        <li><a href="#sec12"><span class="num">12</span><span>Key Design Decisions</span></a></li>
+        <li><a href="#sec13"><span class="num">13</span><span>Challenges Faced</span></a></li>
+        <li><a href="#sec14"><span class="num">14</span><span>Deployment &amp; Tech Stack</span></a></li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <section id="sec1">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Executive Summary</h2></div>
+    <div class="prose">
+      <p>Every mainstream file-transfer service routes your file through a corporate server and stores it on infrastructure you do not control. This engine challenges that model: <strong>files stream directly between browsers</strong> over a WebRTC DataChannel whenever the network permits, so zero servers touch the data and zero copies exist anywhere.</p>
+      <p>Because peer-to-peer connections fail more often than they succeed in the real world — symmetric NATs, carrier-grade NATs, corporate firewalls — the system treats connectivity as a <strong>probability, not a guarantee</strong>. A 5-second race decides between direct P2P and a cloud fallback that streams the file through AWS S3 and then destroys it with a serverless "Nuke Protocol," backed by a 24-hour lifecycle failsafe.</p>
+    </div>
+    <div class="grid four">
+      <div class="card"><div class="k">Best case</div><div class="v"><strong>Direct P2P</strong>LAN-like speeds, zero server contact, nothing stored</div></div>
+      <div class="card"><div class="k">Worst case</div><div class="v"><strong>Cloud relay</strong>S3 multipart stream + 1-hour presigned URL, auto-destruct after download</div></div>
+      <div class="card"><div class="k">Memory</div><div class="v"><strong>Flat</strong>IndexedDB chunk buffer keeps RAM constant for any file size</div></div>
+      <div class="card"><div class="k">Deploy</div><div class="v"><strong>Production</strong>K8s manifests, non-root multi-stage containers, Prometheus, Render / Railway</div></div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section id="sec2">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Why This Project</h2></div>
+    <div class="prose">
+      <p>The guiding question: <em>what if file transfers could happen directly between browsers — no middleman, no storage, no trace?</em> Pursuing it meant confronting <strong>WebRTC DataChannels</strong>, <strong>NAT traversal</strong>, <strong>STUN/TURN relays</strong>, and the reality that the internet is designed to <em>prevent</em> direct connections between devices.</p>
+      <p>The result is a system built around network connectivity as a probability:</p>
+      <ul>
+        <li><strong>Best case (P2P succeeds)</strong> — files stream directly at LAN-like speeds; no server sees the data.</li>
+        <li><strong>Worst case (P2P fails)</strong> — the system silently pivots to S3 with a 1-hour presigned URL, then destroys the file via a Lambda nuke and a 24-hour lifecycle failsafe.</li>
+      </ul>
+    </div>
+    <div class="callout">
+      <span class="tag">Philosophy</span>
+      <p>The most important code is not the happy path — it is the fallback logic. Every component has a failure mode, and the system's quality is defined by how gracefully it handles each one.</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section id="sec3">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Microservices Architecture</h2></div>
+    <div class="prose">
+      <p>Three independently deployable services sit behind a unified Nginx Ingress: a React SPA, a FastAPI backend, and a Node.js Socket.IO signaling relay. External dependencies are Redis (ephemeral presence), AWS S3 + Lambda (cloud fallback), and a self-hosted Coturn STUN/TURN server.</p>
+    </div>
+
+    <figure>
+      <div class="fig-frame">
+        <svg viewBox="0 0 900 760" role="img" aria-label="Architecture: a React SPA in the browser holds a signaling hook, a WebRTC hook, a hybrid-transfer race controller, and an IndexedDB chunk buffer. It connects over WebSocket to a Node.js Socket.IO signaling server, exchanges ICE candidates with a Coturn STUN/TURN relay, and establishes a direct peer-to-peer DataChannel to another browser. After a 5-second timeout it falls back to a FastAPI backend, which stores presence in Redis with a 60-second TTL and streams the file to AWS S3 in 5 MB multipart parts. An AWS Lambda deletes the S3 object after download. Prometheus scrapes the backend metrics endpoint.">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="d-arrowhead"/></marker>
+            <marker id="aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="d-arrowhead-accent"/></marker>
+          </defs>
+
+          <rect class="d-band" x="8" y="16" width="884" height="250" rx="12"/>
+          <text class="d-bandlabel" x="30" y="42">Browser · React SPA</text>
+          <rect class="d-box" x="40" y="58" width="200" height="86" rx="9"/>
+          <text class="d-title" x="140" y="88" text-anchor="middle">useSignaling</text>
+          <text class="d-sub" x="140" y="108" text-anchor="middle">Socket.IO client</text>
+          <text class="d-sub" x="140" y="124" text-anchor="middle">30 s heartbeat</text>
+          <rect class="d-box-accent" x="260" y="58" width="200" height="86" rx="9"/>
+          <text class="d-title" x="360" y="88" text-anchor="middle">useHybridTransfer</text>
+          <text class="d-sub" x="360" y="108" text-anchor="middle">5 s race controller</text>
+          <text class="d-sub" x="360" y="124" text-anchor="middle">p2p ⇄ cloud</text>
+          <rect class="d-box" x="480" y="58" width="200" height="86" rx="9"/>
+          <text class="d-title" x="580" y="88" text-anchor="middle">useWebRTC</text>
+          <text class="d-sub" x="580" y="108" text-anchor="middle">RTCPeerConnection</text>
+          <text class="d-sub" x="580" y="124" text-anchor="middle">DataChannel</text>
+          <rect class="d-box" x="700" y="58" width="160" height="86" rx="9"/>
+          <text class="d-title" x="780" y="88" text-anchor="middle">IndexedDB</text>
+          <text class="d-sub" x="780" y="108" text-anchor="middle">zero-RAM</text>
+          <text class="d-sub" x="780" y="124" text-anchor="middle">16 KB chunks</text>
+          <rect class="d-box" x="330" y="176" width="240" height="66" rx="9"/>
+          <text class="d-title" x="450" y="203" text-anchor="middle">Peer Browser</text>
+          <text class="d-sub" x="450" y="222" text-anchor="middle">receives DataChannel</text>
+          <path class="d-flow-accent" d="M580 144 L580 209 L570 209" marker-end="url(#aha)"/>
+          <text class="d-lbl-em" x="590" y="180">direct P2P · 16 KB</text>
+
+          <path class="d-flow" d="M140 266 L140 320" marker-end="url(#ah)"/>
+          <text class="d-lbl" x="152" y="300">WebSocket</text>
+          <path class="d-flow" d="M580 266 L580 320" marker-end="url(#ah)"/>
+          <text class="d-lbl" x="592" y="300">ICE candidates</text>
+          <path class="d-flow-accent" d="M360 266 L360 470" marker-end="url(#aha)" stroke-dasharray="5 4"/>
+          <text class="d-lbl-em" x="372" y="360">fallback after 5 s</text>
+
+          <rect class="d-band" x="8" y="326" width="420" height="96" rx="12"/>
+          <text class="d-bandlabel" x="30" y="352">Signaling</text>
+          <rect class="d-box" x="40" y="364" width="360" height="46" rx="9"/>
+          <text class="d-sub" x="220" y="392" text-anchor="middle">Node.js Socket.IO relay · SDP offer/answer + ICE only</text>
+
+          <rect class="d-band" x="470" y="326" width="422" height="96" rx="12"/>
+          <text class="d-bandlabel" x="492" y="352">NAT Traversal</text>
+          <rect class="d-box" x="500" y="364" width="360" height="46" rx="9"/>
+          <text class="d-sub" x="680" y="392" text-anchor="middle">Coturn STUN/TURN · host networking · ports 3478 / 5349</text>
+
+          <rect class="d-band" x="8" y="470" width="884" height="270" rx="12"/>
+          <text class="d-bandlabel" x="30" y="496">Cloud Infrastructure · Kubernetes</text>
+          <rect class="d-box-accent" x="60" y="512" width="260" height="90" rx="9"/>
+          <text class="d-title" x="190" y="542" text-anchor="middle">FastAPI Backend</text>
+          <text class="d-sub" x="190" y="562" text-anchor="middle">auth · heartbeat · upload</text>
+          <text class="d-sub" x="190" y="578" text-anchor="middle">port 8000</text>
+          <rect class="d-box" x="345" y="512" width="220" height="90" rx="9"/>
+          <text class="d-title" x="455" y="542" text-anchor="middle">Redis</text>
+          <text class="d-sub" x="455" y="562" text-anchor="middle">presence store</text>
+          <text class="d-sub" x="455" y="578" text-anchor="middle">TTL 60 s</text>
+          <rect class="d-box" x="590" y="512" width="270" height="90" rx="9"/>
+          <text class="d-title" x="725" y="542" text-anchor="middle">AWS S3</text>
+          <text class="d-sub" x="725" y="562" text-anchor="middle">5 MB multipart stream</text>
+          <text class="d-sub" x="725" y="578" text-anchor="middle">24 h lifecycle</text>
+          <path class="d-flow" d="M190 602 L190 640" marker-end="url(#ah)"/>
+          <path class="d-flow" d="M320 557 L345 557" marker-end="url(#ah)"/>
+          <path class="d-flow" d="M455 602 L455 640" marker-end="url(#ah)"/>
+          <rect class="d-box" x="345" y="646" width="220" height="66" rx="9"/>
+          <text class="d-title" x="455" y="674" text-anchor="middle">AWS Lambda</text>
+          <text class="d-sub" x="455" y="693" text-anchor="middle">Nuke Protocol</text>
+          <path class="d-flow-accent" d="M565 679 L620 679 L620 602" marker-end="url(#aha)"/>
+          <text class="d-lbl-em" x="575" y="700">delete after download</text>
+          <rect class="d-box" x="60" y="646" width="200" height="66" rx="9"/>
+          <text class="d-title" x="160" y="674" text-anchor="middle">Prometheus</text>
+          <text class="d-sub" x="160" y="693" text-anchor="middle">scrape /metrics 15 s</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 1 — Service topology.</b> The accent path is the privacy-preserving default: signaling and TURN never see file bytes, and the DataChannel carries the file directly. The dashed edge is the 5-second fallback into the S3 relay.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 4 -->
+  <section id="sec4">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">The 5-Second Race Algorithm</h2></div>
+    <div class="prose">
+      <p>The heart of the system is the <code>useHybridTransfer</code> hook. Instead of waiting indefinitely for WebRTC to negotiate, it runs an aggressive race between the P2P connection and a 5-second countdown.</p>
+    </div>
+    <pre class="tree">startTransfer(file)
+  │
+  ├─ state: p2p_pending  → connectAndOffer()  → start 5 s countdown
+  │
+  ├─ P2P connected before 5 s ─────┐        ┌──── timer expires (5 s)
+  │                                ▼        ▼
+  │                          state: p2p_active   state: cloud_active
+  │                                │                  │
+  │                    sendFile() via DataChannel   POST /api/upload
+  │                       (16 KB chunks)            (5 MB S3 multipart)
+  │                                │                  │
+  │                                └────► state: completed ◄────┘</pre>
+    <div class="callout">
+      <span class="tag">Why 5 seconds?</span>
+      <p>WebRTC ICE negotiation completes in 1–3 seconds on open networks. A 5-second window gives STUN enough time to probe, but does not leave the user staring at a spinner when they are behind a corporate firewall that will <em>never</em> allow P2P. The user sees only a badge change: <code>P2P Direct</code> → <code>Cloud Server Relay</code>.</p>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section id="sec5">
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">Zero-RAM Chunk Buffering with IndexedDB</h2></div>
+    <div class="prose">
+      <p>Traditional receivers accumulate incoming chunks in a JavaScript array — a 500 MB file then consumes 500 MB of tab RAM and crashes on mobile. This engine writes every incoming 16 KB DataChannel chunk <strong>directly to IndexedDB</strong> (the <code>TransferCache</code> object store), bypassing RAM entirely.</p>
+      <p>The browser's IndexedDB implementation persists to disk (typically LevelDB), so memory usage stays flat regardless of file size. Only at the final step does the receiver read all chunks back, assemble a <code>Blob</code>, and trigger the download. This is the difference between "transfers files up to 50 MB" and "transfers files of arbitrary size."</p>
+    </div>
+    <div class="grid two">
+      <div class="card"><div class="k">Backpressure</div><div class="v">Sender pauses when <code>bufferedAmount</code> exceeds the 64 KB <code>bufferedAmountLowThreshold</code>, resuming via <code>onbufferedamountlow</code> — natural flow control that adapts to network speed.</div></div>
+      <div class="card"><div class="k">Chunk size</div><div class="v">16 KB sits well below the SCTP ~64 KB fragmentation boundary while minimising per-chunk overhead — the reliability/speed sweet spot.</div></div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section id="sec6">
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title">Burn-After-Reading Data Destruction</h2></div>
+    <div class="prose"><p>Cloud-relayed files are protected by a three-layer destruction cascade. Even if the user never triggers the Nuke Protocol, the file cannot exist beyond 24 hours — AWS enforces this at the infrastructure level.</p></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="num">Layer</th><th>Mechanism</th><th>Trigger</th><th>Latency</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td><code>abort_multipart_upload</code></td><td>Upload failure mid-stream</td><td>Immediate</td></tr>
+          <tr><td class="num">2</td><td>AWS Lambda "Nuke Protocol" (<code>head_object</code> → <code>delete_object</code>)</td><td>Post-download deletion request</td><td>Seconds</td></tr>
+          <tr><td class="num">3</td><td>S3 lifecycle policy</td><td>24-hour automatic expiration</td><td>&le; 24 hours</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h4>Graceful degradation at every layer</h4>
+    <ul>
+      <li><strong>Redis unavailable?</strong> → async <code>InMemoryStore</code> with <code>asyncio.Lock</code> and manual TTL eviction.</li>
+      <li><strong>WebRTC blocked?</strong> → 5-second timer triggers the S3 relay.</li>
+      <li><strong>S3 upload fails mid-stream?</strong> → <code>abort_multipart_upload</code> cleans up orphaned parts.</li>
+      <li><strong>Container crashes?</strong> → Kubernetes restarts the pod with resource limits preventing OOM cascade.</li>
+    </ul>
+  </section>
+
+  <!-- 7 -->
+  <section id="sec7">
+    <div class="sec-head"><span class="sec-num">07</span><h2 class="sec-title">Three-Tier Transfer Hierarchy</h2></div>
+    <div class="prose"><p>A cascading fallback strategy that prioritises privacy at every step.</p></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="num">Priority</th><th>Route</th><th>Latency</th><th>Privacy</th><th>When used</th></tr></thead>
+        <tbody>
+          <tr class="row-strong"><td class="num">1</td><td>WebRTC Direct P2P</td><td>Lowest</td><td>Maximum — zero server contact</td><td>Both peers on open / cone NAT</td></tr>
+          <tr><td class="num">2</td><td>TURN Relay via Coturn</td><td>Medium</td><td>High — encrypted relay, no storage</td><td>One or both peers behind restricted NAT</td></tr>
+          <tr><td class="num">3</td><td>AWS S3 Cloud Upload</td><td>Highest</td><td>Moderate — temporary storage, auto-destruct</td><td>WebRTC fully fails (symmetric NAT, firewall)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section id="sec8">
+    <div class="sec-head"><span class="sec-num">08</span><h2 class="sec-title">End-to-End Transfer Flow</h2></div>
+    <div class="prose"><p>From anonymous session creation through lobby discovery, SDP exchange, and either a direct DataChannel transfer or the cloud fallback.</p></div>
+    <pre class="tree">1  Alice → POST /api/auth/join {"anonymous_name": "Hacker_4821"}
+2  Auth  → JWT token (UUID + name + 2 h expiry)
+3  Alice → POST /api/heartbeat  (every 30 s)  → SETEX user_online:{uuid} 60
+4  Bob   → GET  /api/users/online             → [{user_id, name}]   (Alice visible)
+   ── Bob selects Alice from the lobby ──
+5  Alice, Bob → emit('register', {uuid})      → Socket.IO userSocketMap
+6  Alice → emit('offer',  {targetUuid, sdp})  → relayed to Bob
+7  Bob   → emit('answer', {targetUuid, sdp})  → relayed to Alice
+8  both  → emit('ice-candidate', …)           → trickled both ways
+
+   ┌─ P2P succeeds (&lt; 5 s) ───────────────────────────────────────┐
+   │  DataChannel: JSON metadata {filename, size, type}           │
+   │  DataChannel: binary chunks (16 KB)  → Bob writes IndexedDB  │
+   │  Bob assembles Blob → triggers download                      │
+   └─────────────────────────────────────────────────────────────┘
+   ┌─ P2P fails (5 s timeout) ───────────────────────────────────┐
+   │  Alice → POST /api/upload  (5 MB multipart stream to S3)    │
+   │  S3    → 1-hour presigned URL → shared with Bob             │
+   │  Bob   → downloads → triggers Lambda Nuke → S3 delete_object │
+   └────────────────────────────────────────────────────────────┘</pre>
+    <div class="callout">
+      <span class="tag">Signaling is a pure relay</span>
+      <p>Once ICE completes and the DataChannel opens, the signaling server is no longer involved. It never inspects or stores file data — only SDP offers/answers and ICE candidates.</p>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section id="sec9">
+    <div class="sec-head"><span class="sec-num">09</span><h2 class="sec-title">Data Storage Schema</h2></div>
+    <h4>Redis presence store</h4>
+    <pre><code>Key pattern:   user_online:{uuid}
+Value:         "{anonymous_name}"        e.g. "Hacker_4821"
+TTL:           60 seconds
+Heartbeat:     every 30 seconds (POST /api/heartbeat)
+Scan method:   SCAN (non-blocking) + batched MGET</code></pre>
+    <h4>S3 object layout</h4>
+    <pre><code>Path:          uploads/{user_id}/{uuid4}.{extension}
+Metadata:      {"sender_uuid": "{user_id}"}
+Presigned URL: GET, expires in 3600 seconds (1 hour)
+Lifecycle:     Expiration after 1 day
+Multipart:     AbortIncompleteMultipartUpload after 1 day</code></pre>
+    <h4>IndexedDB (browser-side)</h4>
+    <pre><code>Database:      TransferCache
+Object store:  chunks
+Data:          raw binary ArrayBuffer (16 KB per entry)
+Lifecycle:     cleared after Blob assembly and download trigger</code></pre>
+    <h4>Pydantic models</h4>
+    <pre><code>class JoinRequest(BaseModel):
+    anonymous_name: str          # e.g. "Hacker_4821"
+
+class TokenResponse(BaseModel):
+    access_token: str            # HS256 JWT
+    token_type: str              # "bearer"</code></pre>
+  </section>
+
+  <!-- 10 -->
+  <section id="sec10">
+    <div class="sec-head"><span class="sec-num">10</span><h2 class="sec-title">API &amp; Signaling Protocol</h2></div>
+    <h4>REST API — FastAPI, port 8000</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>GET</code></td><td><code>/ping</code></td><td>—</td><td>Health check</td></tr>
+          <tr><td><code>GET</code></td><td><code>/metrics</code></td><td>—</td><td>Auto-instrumented Prometheus metrics</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/auth/join</code></td><td>—</td><td>Anonymous session creation → HS256 JWT</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/heartbeat</code></td><td>✅</td><td>Refresh Redis presence TTL to 60 s</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/users/online</code></td><td>—</td><td>List active peers</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/upload</code></td><td>✅</td><td>S3 cloud fallback upload → presigned URL</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h4>WebSocket signaling events — Socket.IO, port 3001</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Event</th><th>Direction</th><th>Payload</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>register</code></td><td>Client → Server</td><td><code>{uuid}</code></td><td>Map UUID to socket ID</td></tr>
+          <tr><td><code>offer</code></td><td>Bidirectional</td><td><code>{targetUuid, sdp}</code></td><td>Relay WebRTC SDP offer</td></tr>
+          <tr><td><code>answer</code></td><td>Bidirectional</td><td><code>{targetUuid, sdp}</code></td><td>Relay WebRTC SDP answer</td></tr>
+          <tr><td><code>ice-candidate</code></td><td>Bidirectional</td><td><code>{targetUuid, candidate}</code></td><td>Trickle ICE candidates</td></tr>
+          <tr><td><code>disconnect</code></td><td>Auto</td><td>—</td><td>Clean up UUID mapping</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section id="sec11">
+    <div class="sec-head"><span class="sec-num">11</span><h2 class="sec-title">Security Architecture</h2></div>
+    <h4>Authentication flow</h4>
+    <pre class="tree">Client                                  Server
+  │  POST /api/auth/join {"anonymous_name": "X"}
+  │ ─────────────────────────────────────►  generate UUID4
+  │                                         sign JWT (HS256): sub=uuid, name=X, exp=+2h
+  │  ◄─────────────────────────────────────  {"access_token": "eyJ..."}
+  │  POST /api/heartbeat  Authorization: Bearer eyJ...
+  │ ─────────────────────────────────────►  decode + verify HS256 + check exp
+  │                                         SETEX user_online:{uuid} 60
+  │  ◄─────────────────────────────────────  200 OK</pre>
+    <h4>Container security posture</h4>
+    <ul>
+      <li><strong>Non-root execution</strong> across all containers (<code>appuser:appgroup</code>, <code>nginx:nginx</code>).</li>
+      <li><strong>Multi-stage builds</strong> strip Node.js, npm, and pip from production images.</li>
+      <li><strong>Kubernetes resource limits</strong> — API 500m / 512Mi, frontend 200m / 128Mi, signaling 250m / 256Mi.</li>
+      <li><strong>AWS IAM least-privilege</strong> — the Lambda holds only <code>s3:DeleteObject</code> and <code>s3:GetObject</code>.</li>
+      <li><strong>No persistent credentials in containers</strong> — secrets injected via Kubernetes <code>Secret</code> objects.</li>
+    </ul>
+  </section>
+
+  <!-- 12 -->
+  <section id="sec12">
+    <div class="sec-head"><span class="sec-num">12</span><h2 class="sec-title">Key Design Decisions</h2></div>
+    <div class="grid two">
+      <div class="card"><div class="k">16 KB DataChannel chunks</div><div class="v">SCTP fragments messages crossing the ~64 KB boundary, destroying throughput. 16 KB stays well below it while minimising per-chunk overhead.</div></div>
+      <div class="card"><div class="k">Redis ephemeral keys, not a DB</div><div class="v">Presence is temporal. <code>SETEX</code> with a 60 s TTL means a crashed client's key simply evaporates — no cleanup jobs, no phantom users. 30 s heartbeat gives a 2× margin.</div></div>
+      <div class="card"><div class="k">SCAN, not KEYS *</div><div class="v">Redis is single-threaded; <code>KEYS *</code> blocks the whole keyspace. <code>SCAN</code> returns cursor-based pages and stays responsive at thousands of keys.</div></div>
+      <div class="card"><div class="k">In-memory Redis fallback</div><div class="v"><code>InMemoryStore</code> mirrors the async Redis API with <code>asyncio.Lock</code> and manual TTL, so <code>python start.py</code> runs with zero external dependencies.</div></div>
+      <div class="card"><div class="k">aioboto3, not boto3</div><div class="v">Synchronous boto3 blocks the event loop during uploads, serialising every transfer. aioboto3 wraps operations in async context managers for true concurrency.</div></div>
+      <div class="card"><div class="k">Split Ingress resources</div><div class="v">Nginx regex rewrite annotations apply to every path in an Ingress. One Ingress for <code>/api</code> rewrites, one without for <code>/</code> and <code>/socket.io</code>, prevents breaking static-asset paths.</div></div>
+      <div class="card"><div class="k">Host networking for Coturn</div><div class="v">TURN relay needs dynamic UDP ports across 49152–65535. Docker bridge NAT cannot handle that scale efficiently; host networking gives Coturn the raw stack.</div></div>
+      <div class="card"><div class="k">IndexedDB, not in-memory arrays</div><div class="v">A JS array of 500 MB of ArrayBuffers pushes the tab past 500 MB RAM. IndexedDB writes to disk, keeping RAM flat for arbitrary file sizes.</div></div>
+    </div>
+  </section>
+
+  <!-- 13 -->
+  <section id="sec13">
+    <div class="sec-head"><span class="sec-num">13</span><h2 class="sec-title">Challenges Faced &amp; Solutions</h2></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="num">#</th><th>Problem</th><th>Solution</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td><strong>Symmetric NAT</strong> — P2P worked on home networks but failed 100% on mobile data and corporate networks</td><td>Self-hosted Coturn TURN with host networking to relay encrypted media, plus the 5-second race so users never wait on a connection that will never form</td></tr>
+          <tr><td class="num">2</td><td><strong>Railway dynamic <code>$PORT</code></strong> — hardcoded <code>--port 8000</code> made the container unreachable behind the proxy</td><td><code>entrypoint.sh</code> reads <code>$PORT</code> at runtime: <code>exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}"</code></td></tr>
+          <tr><td class="num">3</td><td><strong>Redis blocking the event loop</strong> — eager pool init at import time hung the whole FastAPI startup if Redis was slow</td><td>Lazy Redis init wrapped in the <code>InMemoryStore</code> fallback — connection attempted on first use, transparent takeover on failure</td></tr>
+          <tr><td class="num">4</td><td><strong>Browser RAM exhaustion</strong> — a 200 MB file in a JS array killed the tab on mobile</td><td>IndexedDB chunk buffering — each 16 KB chunk written straight to <code>TransferCache</code>; RAM stays constant</td></tr>
+          <tr><td class="num">5</td><td><strong>DataChannel buffer overflow</strong> — sending as fast as <code>FileReader</code> reads silently dropped chunks</td><td>Backpressure via <code>bufferedAmountLowThreshold</code> (64 KB) with pause/resume on <code>onbufferedamountlow</code></td></tr>
+          <tr><td class="num">6</td><td><strong>Nginx regex vs SPA routing</strong> — a single Ingress rewrote static assets to 404</td><td>Two separate Ingress resources — one for <code>/api</code> rewrites, one for <code>/</code> and <code>/socket.io</code></td></tr>
+          <tr><td class="num">7</td><td><strong>Orphaned S3 multipart uploads</strong> — partial uploads persisted, accruing cost</td><td>Three-layer cleanup: immediate <code>abort_multipart_upload</code>, a 1-day lifecycle rule, and an on-demand Lambda</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 14 -->
+  <section id="sec14">
+    <div class="sec-head"><span class="sec-num">14</span><h2 class="sec-title">Deployment &amp; Tech Stack</h2></div>
+    <div class="grid three">
+      <div class="card"><div class="k">Backend</div><div class="v">FastAPI, Uvicorn, redis.asyncio, aioboto3 / botocore, PyJWT (HS256), python-multipart, Pydantic, prometheus-fastapi-instrumentator</div></div>
+      <div class="card"><div class="k">Frontend</div><div class="v">React 18, Vite 5, Tailwind CSS 3, Socket.IO client, Axios, WebRTC APIs, IndexedDB</div></div>
+      <div class="card"><div class="k">Infrastructure</div><div class="v">Docker (multi-stage, non-root), Kubernetes, Nginx Ingress, Coturn, AWS S3 + Lambda, Prometheus (ServiceMonitor), Render / Railway, Let's Encrypt via cert-manager</div></div>
+    </div>
+    <h4>One-command local development</h4>
+    <pre><code>python start.py
+# boots FastAPI :8000 (hot-reload), Socket.IO :3001, Vite :5173
+# waits 4 s, opens http://localhost:5173, monitors all 3 processes</code></pre>
+    <h4>Kubernetes deployment</h4>
+    <pre><code>kubectl apply -f infrastructure/k8s/app-secrets.yaml
+kubectl apply -f infrastructure/k8s/api-deployment.yaml
+kubectl apply -f infrastructure/k8s/frontend-deployment.yaml
+kubectl apply -f infrastructure/k8s/socket-deployment.yaml
+kubectl apply -f infrastructure/k8s/ingress.yaml
+kubectl apply -f infrastructure/k8s/api-servicemonitor.yaml</code></pre>
+    <h4>Environment variables</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Variable</th><th>Required</th><th>Default</th></tr></thead>
+        <tbody>
+          <tr><td><code>SECRET_KEY</code></td><td>✅</td><td>—</td></tr>
+          <tr><td><code>REDIS_URL</code></td><td>—</td><td><code>None</code> → InMemoryStore</td></tr>
+          <tr><td><code>AWS_ACCESS_KEY_ID</code> / <code>AWS_SECRET_ACCESS_KEY</code></td><td>✅</td><td>—</td></tr>
+          <tr><td><code>AWS_REGION</code></td><td>✅</td><td><code>eu-north-1</code></td></tr>
+          <tr><td><code>S3_BUCKET_NAME</code></td><td>✅</td><td>—</td></tr>
+          <tr><td><code>PORT</code></td><td>—</td><td><code>8000</code> / <code>3001</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="foot">Hybrid P2P-Cloud Anonymous Transfer Engine · Technical Report · Built with FastAPI · React · WebRTC · Socket.IO · AWS · Redis · Kubernetes</p>
+</main>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('themeToggle');
+    function current(){
+      return root.getAttribute('data-theme') ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    }
+    btn.addEventListener('click', function(){
+      var next = current() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('hp2p-theme', next); } catch (e) {}
+    });
+    try {
+      var saved = localStorage.getItem('hp2p-theme');
+      if (saved) root.setAttribute('data-theme', saved);
+    } catch (e) {}
+  })();
+</script>

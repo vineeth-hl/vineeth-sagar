@@ -3,7 +3,10 @@ title: "Multi-Modal Prompt Injection Defense Gateway (MPI-DG)"
 description: "An inline zero-trust security proxy for LLMs and multimodal models: structured-query isolation (IFS-R), multi-turn temporal risk scoring (SWCSA), and frequency-domain image/audio sanitization — with no model retraining."
 date: "2026-08-24"
 tags: ["LLM Security", "Prompt Injection", "Multimodal AI", "AI/ML"]
+pinned: 2
 downloads:
+  - label: "Read Online"
+    url: "/reports/Multi-Modal Prompt Injection Defense Gateway/mpi-dg-report.html"
   - label: "Project Report"
     url: "/reports/Multi-Modal Prompt Injection Defense Gateway/Multi-Modal Prompt Injection Defense Gateway-report.pdf"
   - label: "Research Paper"
@@ -12,7 +15,7 @@ downloads:
 
 **Robust Context-Aware Security Framework for Large Language & Multi-Modal Models**
 
-## 📌 1. Project Overview & Executive Summary
+## 1. Project Overview & Executive Summary
 
 | Section | Project Content |
 | :--- | :--- |
@@ -22,7 +25,7 @@ downloads:
 | **Core Innovations** | • **IFS-R Module**: Instruction-Feedback-Structure Sanitization via Delimiter-based parsing & Structured Queries<br />• **SWCSA Module**: Sliding Window Context Semantic Analysis, Temporal Risk Accumulation & Agent Drift Tracking<br />• **Multimodal Preprocessing Layer**: Frequency-domain acoustic filtering & OCR/Mind-map spatial sanitization<br />• **Active Overwriting Engine**: Dynamic prompt suffix optimization & SecAlign Preference Optimization |
 | **Theoretical Grounding** | StruQ (*USENIX Security '25*), Temporal Context Awareness (*arXiv '25*), Agent Drift (*arXiv '26*), SecAlign (*Meta/UC Berkeley '25*), Mind-Mapping Visual Injection (*MDPI '25*), Audio Jailbreaks (*IEEE '25*), PrivMLLM (*'25*) |
 
-## 💡 2. Why This Project?
+## 2. Why This Project?
 
 * **The Generative AI Security Paradox:** Large Language Models (LLMs) and Multimodal LLMs (MLLMs) are trained to follow natural language instructions flexibly. However, this flexibility creates a fundamental vulnerability: models cannot intrinsically distinguish between legitimate developer system instructions and untrusted user-supplied data payloads.
 * **Failure of Traditional Boundary Defenses:** Static keyword blocklists, naive prompt wrapping (e.g., `"User input: "` prefixes), and simple regex matching fail against semantic paraphrasing, multilingual jailbreaks, adversarial suffix optimization (e.g., GCG), and multi-turn manipulation.
@@ -31,7 +34,7 @@ downloads:
   2. *Acoustic Injection:* Token-level adversarial audio perturbations that exploit speech-to-token encoders (e.g., SpeechGPT) to hijack execution flow without alerting human listeners.
 * **Production & Enterprise Imperatives:** Deploying AI agents safely requires preventing unauthorized tool calling, prompt leakage, confidential data exfiltration, and compliance violations without retraining underlying foundation models.
 
-## 🏗️ 3. System Architecture
+## 3. System Architecture
 
 The gateway functions as an **inline, multi-stage, zero-trust security proxy** intercepting requests before they reach foundation models and validating responses before egress.
 
@@ -66,11 +69,11 @@ flowchart TD
     end
 ```
 
-## 🔬 4. Deep Dive into Modular Architecture
+## 4. Deep Dive into Modular Architecture
 
 ### 4.1 IFS-R Module (Instruction-Feedback-Structure Sanitization)
 * **Theoretical Foundation:** *StruQ: Defending Against Prompt Injection with Structured Queries (USENIX Security 2025)*.
-* **Mechanism:** 
+* **Mechanism:**
   * Transforms unstructured prompt payloads into strict schema envelopes using cryptographically random nonce delimiters: `<data_slot id="uuid_nonce">...</data_slot>`.
   * Employs Structured Instruction Tuning (SIT) syntax to mathematically isolate user data from executable control logic.
   * Neutralizes prompt escaping sequences (e.g., `</system>`, `\n\nAssistant:`) by escaping delimiter collisions at the boundary.
@@ -105,7 +108,7 @@ $$
   * Employs K-Means clustering on the prompt representation space to classify attack intent types.
   * Injects optimized defensive suffixes dynamically into the system context when borderline risk is identified, forcing the model to adhere to safety alignments without rejecting benign queries.
 
-## ⚡ 5. Key Features
+## 5. Key Features
 
 1. **Tri-Modal Comprehensive Shielding:** Unified defense covering Text, Images/Diagrams, and Audio inputs.
 2. **Zero Model Retraining Overhead:** Portable proxy layer that secures closed-source (GPT-4o, Claude 3.5, Gemini 1.5) and open-source models (Llama 3, Mistral, LLaVA).
@@ -114,7 +117,7 @@ $$
 5. **Bidirectional Egress Monitoring:** Prevents system prompt leakage, canary token exfiltration, and SSRF attacks via markdown rendering.
 6. **Sub-50ms Text Latency:** Highly optimized vector similarity, caching, and async pipelining.
 
-## 🧰 6. Tech Stack
+## 6. Tech Stack
 
 | Layer | Technologies & Tools |
 | :--- | :--- |
@@ -125,7 +128,7 @@ $$
 | **LLM Proxy & Routing** | LiteLLM, LangChain / LlamaIndex core interfaces |
 | **Testing & Benchmarks** | PyTest, Locust, GCG Attack Generator, PyRIT (Python Risk Identification Toolkit) |
 
-## 🔄 7. Data Pipeline & Schema
+## 7. Data Pipeline & Schema
 
 ### Data Flow Pipeline
 ```
@@ -195,7 +198,7 @@ $$
 }
 ```
 
-## 🌐 8. API Endpoints Specification
+## 8. API Endpoints Specification
 
 | Method | Endpoint | Description | Request Payload | Response |
 | :--- | :--- | :--- | :--- | :--- |
@@ -205,7 +208,7 @@ $$
 | `POST` | `/api/v1/admin/rules/override` | Dynamically update defense thresholds and suffixes | `cluster_id`, `new_suffix`, `cutoff` | Status confirmation |
 | `GET` | `/healthz` | Health check for gateway, Redis, and upstream models | None | `{ "status": "healthy" }` |
 
-## 🧪 9. Testing Strategy
+## 9. Testing Strategy
 
 * **Unit Testing (`pytest tests/unit/`):**
   * *Delimiter Collision Tests:* Validating that malicious inputs attempting to close XML/JSON tags are neutralized by IFS-R.
@@ -218,7 +221,7 @@ $$
   * *Acoustic Attack Suite:* Token-level adversarial audio clips against speech-to-text models.
   * *Optimization Attacks:* Greedy Coordinate Gradient (GCG) adversarial suffix benchmarks.
 
-## ⚖️ 10. Key Design Decisions & Trade-offs
+## 10. Key Design Decisions & Trade-offs
 
 1. **Inline Proxy vs. Model Fine-Tuning:**
    * *Decision:* Implemented an inline gateway proxy rather than relying strictly on parameter-level model tuning.
@@ -230,7 +233,7 @@ $$
    * *Decision:* Utilized a fixed-size sliding window ($K=5$) with exponential risk decay.
    * *Rationale:* Keeps memory footprint and vector calculation latency in Redis $O(1)$ while maintaining high sensitivity to gradual conversational drift.
 
-## 🚧 11. Challenges Faced & Engineering Solutions
+## 11. Challenges Faced & Engineering Solutions
 
 | Challenge | Real-World Impact | Engineering Solution Implemented |
 | :--- | :--- | :--- |
@@ -239,14 +242,14 @@ $$
 | **Multi-Turn "Salami" Attacks** | Attackers splitting jailbreak payloads over multiple innocent-looking messages. | Developed the SWCSA module with Temporal Context Awareness (TCA) and cumulative risk decay scoring. |
 | **OCR Evasion via Complex Visuals** | Adversarial text hidden in faint colors or mind-map branch nodes. | Implemented adaptive thresholding, morphological noise removal, and hierarchical node graph parsing. |
 
-## 🎓 12. What I Learned
+## 12. What I Learned
 
 * The architectural tension between Turing-complete natural language reasoning and deterministic security boundaries in LLMs.
 * How indirect injection vulnerabilities can be weaponized through passive multimodal data vectors (audio streams, diagram images, PDFs).
 * Practical implementation of modern generative AI security paradigms: Structured Instruction Tuning (SIT), Direct Preference Optimization (DPO), and Temporal Risk Modeling.
 * Designing high-throughput, low-latency asynchronous security gateways using Python, FastAPI, Redis, and Vector search.
 
-## 🚀 13. Setup & Execution Guide
+## 13. Setup & Execution Guide
 
 ### Prerequisites
 * Python 3.10+
@@ -285,7 +288,7 @@ docker run -d -p 6379:6379 --name redis-gateway redis:alpine
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-## 📊 14. Performance & Evaluation Metrics
+## 14. Performance & Evaluation Metrics
 
 | Metric / Attack Category | Baseline Model (No Gateway) | With Multi-Modal Defense Gateway (MPI-DG) |
 | :--- | :--- | :--- |
@@ -296,17 +299,17 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 | **Average Preprocessing Overhead** | 0 ms | **~42 ms (Text) / ~180 ms (Multimodal)** |
 | **False Positive Rate (Benign Benchmarks)** | 0% | **< 2.3%** |
 
-## 🔮 15. Future Enhancements
+## 15. Future Enhancements
 
 1. **Hardware-Assisted Confidential Inference:** Integrating Trusted Execution Environments (TEEs) and Three-Party Secure Inference (inspired by *PrivMLLM*) for zero-knowledge prompt privacy.
 2. **Self-Healing Adaptive Honeypots:** Generating dynamic decoy functions to trap and analyze zero-day prompt injection patterns in real time.
 3. **Graph-RAG Security Extensions:** Extending IFS-R structured queries to protect knowledge graphs and vector database ingestion pipelines in enterprise RAG systems.
 
-## 📝 16. Conclusion
+## 16. Conclusion
 
 The **Multi-Modal Prompt Injection Defense Gateway (MPI-DG)** establishes a comprehensive, zero-trust perimeter for Large Language and Multimodal models. By synergizing structured query isolation (**IFS-R**), multi-turn temporal context awareness (**SWCSA**), and rigorous multimodal signal preprocessing, the framework eliminates critical attack surfaces while maintaining high conversational utility, deterministic security guarantees, and sub-second operational latency.
 
-## 📚 17. Attack Taxonomy & Threat Vectors Covered
+## 17. Attack Taxonomy & Threat Vectors Covered
 
 ```
                        ┌────────────────────────────────────────────────────────┐
