@@ -2,6 +2,7 @@
 //   default        -> the React component
 //   frontmatter    -> parsed YAML frontmatter (via remark-mdx-frontmatter)
 //   readingMinutes -> word-count estimate (via the remarkReadingTime plugin)
+//   headings       -> [{ id, text, level }] for the TOC (via remarkTocHeadings)
 const modules = import.meta.glob('./content/*.mdx', { eager: true });
 
 const slugOf = (path) => path.split('/').pop().replace(/\.mdx$/, '');
@@ -18,7 +19,8 @@ export const posts = Object.entries(modules)
             tags: Array.isArray(fm.tags) ? fm.tags : [],
             thumbnail: fm.thumbnail || null,
             reportUrl: fm.reportUrl || null,
-            readingMinutes: mod.readingMinutes || 1
+            readingMinutes: mod.readingMinutes || 1,
+            headings: Array.isArray(mod.headings) ? mod.headings : []
         };
     })
     .sort((a, b) => (a.date < b.date ? 1 : -1));

@@ -4,6 +4,7 @@ import { MDXProvider } from '@mdx-js/react';
 import { getPost } from './posts';
 import { mdxComponents } from './mdx-components';
 import DownloadButton from './DownloadButton';
+import TableOfContents from './TableOfContents';
 import useTitle from './useTitle';
 
 export default function BlogPost() {
@@ -18,6 +19,8 @@ export default function BlogPost() {
 
     return (
         <>
+            <TableOfContents headings={post.headings} />
+
             <article className="mx-auto max-w-[46rem] px-5 pb-12 pt-14 md:pb-24">
                 <Link to="/blog" className="text-xs font-medium uppercase tracking-[0.25em] text-secondary hover:text-primary">
                     &larr; All posts
@@ -53,6 +56,7 @@ export default function BlogPost() {
                 </header>
 
                 <div
+                    id="post-content"
                     className="prose prose-invert max-w-none
                         prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-primary
                         prose-h2:mt-12 prose-h2:text-2xl prose-h3:text-xl
