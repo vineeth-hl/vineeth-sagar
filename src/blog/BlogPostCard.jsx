@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { FaThumbtack } from 'react-icons/fa6';
 
 /* deterministic gradient fallback when a post has no thumbnail */
 function hashHue(str) {
@@ -30,6 +31,12 @@ export default function BlogPostCard({ post }) {
                             background: `radial-gradient(120% 120% at 15% 0%, hsl(${hue} 70% 20%), #0d0d0d 70%)`
                         }}
                     />
+                )}
+                {post.pinned != null && (
+                    <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full border border-accent-blue/50 bg-background/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent-blue backdrop-blur">
+                        <FaThumbtack className="text-[9px]" />
+                        Pinned
+                    </span>
                 )}
             </div>
 

@@ -1,0 +1,572 @@
+<title>FloatChat — Conversational Oceanographic Intelligence</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    --paper:#f2f7f7;
+    --surface:#ffffff;
+    --surface-2:#e6f0f0;
+    --ink:#12211f;
+    --muted:#4d6360;
+    --faint:#7f9693;
+    --line:#d0e0dd;
+    --accent:#0d7a8c;
+    --accent-soft:#d8eef0;
+    --warn:#9a5f0d;
+    --crit:#a63b2b;
+    --ok:#1f7a43;
+    --shadow:0 1px 2px rgba(12,28,26,.04), 0 8px 24px -12px rgba(12,28,26,.16);
+
+    --f-display:"Fraunces", Georgia, "Times New Roman", serif;
+    --f-body:"IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+    --measure:66ch;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0b1414;
+      --surface:#121c1c;
+      --surface-2:#172424;
+      --ink:#e4eeed;
+      --muted:#9bb0ac;
+      --faint:#6a807d;
+      --line:#243534;
+      --accent:#4fc3d4;
+      --accent-soft:#0f2a2e;
+      --warn:#d69a4e;
+      --crit:#e77762;
+      --ok:#5bbd83;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0b1414;
+    --surface:#121c1c;
+    --surface-2:#172424;
+    --ink:#e4eeed;
+    --muted:#9bb0ac;
+    --faint:#6a807d;
+    --line:#243534;
+    --accent:#4fc3d4;
+    --accent-soft:#0f2a2e;
+    --warn:#d69a4e;
+    --crit:#e77762;
+    --ok:#5bbd83;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.55);
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+  header.top{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem clamp(1rem,4vw,2.4rem);background:color-mix(in srgb, var(--paper) 86%, transparent);backdrop-filter:saturate(140%) blur(8px);border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:.6rem;font-family:var(--f-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  .top nav{display:flex;gap:.4rem;align-items:center}
+  .top nav a{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;color:var(--muted);text-decoration:none;padding:.3rem .55rem;border-radius:6px}
+  .top nav a:hover{color:var(--ink);background:var(--surface-2)}
+  .toggle{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;background:var(--surface);color:var(--muted);border:1px solid var(--line);padding:.35rem .6rem;border-radius:7px;cursor:pointer}
+  .toggle:hover{color:var(--ink);border-color:var(--accent)}
+
+  main{max-width:960px;margin:0 auto;padding:0 clamp(1rem,4vw,2.4rem) 6rem}
+  .prose{max-width:var(--measure)}
+  p{margin:0 0 1rem}
+  a{color:var(--accent);text-underline-offset:2px}
+
+  .hero{padding:clamp(2.6rem,7vw,5rem) 0 clamp(1.8rem,4vw,3rem);border-bottom:1px solid var(--line);animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+  @media (prefers-reduced-motion: reduce){ .hero{animation:none} }
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .eyebrow{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:1.2rem;display:flex;align-items:center;gap:.7rem}
+  .eyebrow::before{content:"";width:34px;height:1px;background:var(--accent)}
+  h1{font-family:var(--f-display);font-weight:600;font-size:clamp(2rem,6vw,3.4rem);line-height:1.04;letter-spacing:-.01em;margin:0 0 1rem;text-wrap:balance}
+  .lede{font-size:clamp(1.05rem,2.4vw,1.28rem);color:var(--muted);max-width:56ch;margin-bottom:2rem}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .stat{background:var(--surface);padding:1.1rem 1.15rem}
+  .stat .n{font-family:var(--f-display);font-weight:600;font-size:1.6rem;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .stat .l{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-top:.5rem}
+  .meta-line{margin-top:1.5rem;font-family:var(--f-mono);font-size:.74rem;color:var(--faint);letter-spacing:.04em}
+  @media (max-width:680px){ .stats{grid-template-columns:repeat(2,1fr)} }
+
+  .toc{margin:2.5rem 0 0;padding:1.4rem 1.5rem;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+  .toc h2{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:0 0 1rem}
+  .toc ol{margin:0;padding:0;list-style:none;columns:2;column-gap:2.5rem}
+  .toc li{margin:0 0 .5rem;break-inside:avoid}
+  .toc a{display:flex;gap:.7rem;text-decoration:none;color:var(--ink);font-size:.92rem}
+  .toc a:hover{color:var(--accent)}
+  .toc a .num{font-family:var(--f-mono);font-size:.78rem;color:var(--faint);min-width:1.4rem}
+  @media (max-width:640px){ .toc ol{columns:1} }
+
+  section{padding:clamp(2.4rem,5vw,3.6rem) 0;border-bottom:1px solid var(--line)}
+  .sec-head{margin-bottom:1.6rem}
+  .sec-num{font-family:var(--f-mono);font-size:.76rem;letter-spacing:.14em;color:var(--accent);display:block;margin-bottom:.5rem}
+  h2.sec-title{font-family:var(--f-display);font-weight:600;font-size:clamp(1.5rem,3.6vw,2.1rem);line-height:1.1;letter-spacing:-.01em;margin:0;text-wrap:balance}
+  h3{font-family:var(--f-body);font-weight:600;font-size:1.06rem;margin:2.2rem 0 .7rem;color:var(--ink);display:flex;align-items:baseline;gap:.6rem}
+  h3 .h3num{font-family:var(--f-mono);font-size:.8rem;color:var(--accent);font-weight:500}
+  h4{font-family:var(--f-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:1.6rem 0 .6rem}
+
+  ul,ol.body-list{margin:0 0 1rem;padding-left:1.2rem}
+  li{margin:.35rem 0}
+  strong{font-weight:600;color:var(--ink)}
+  .prose ul li::marker{color:var(--accent)}
+
+  .callout{border-left:2px solid var(--accent);background:var(--accent-soft);padding:1rem 1.2rem;border-radius:0 10px 10px 0;margin:1.4rem 0;max-width:var(--measure)}
+  .callout p:last-child{margin:0}
+  .callout .tag{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:.35rem}
+
+  figure{margin:2rem 0;padding:0}
+  .fig-frame{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:clamp(1rem,3vw,1.8rem);box-shadow:var(--shadow);overflow-x:auto}
+  figure svg{display:block;width:100%;height:auto;min-width:540px;color:var(--ink)}
+  figcaption{margin-top:.9rem;font-size:.86rem;color:var(--muted);font-family:var(--f-body);max-width:var(--measure)}
+  figcaption b{color:var(--ink);font-weight:600}
+
+  .d-band{fill:var(--surface-2);stroke:var(--line);stroke-width:1}
+  .d-bandlabel{fill:var(--faint);font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+  .d-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+  .d-box-accent{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.75}
+  .d-title{fill:var(--ink);font-family:var(--f-body);font-size:13px;font-weight:600}
+  .d-sub{fill:var(--muted);font-family:var(--f-mono);font-size:11px}
+  .d-flow{fill:none;stroke:var(--muted);stroke-width:1.5}
+  .d-flow-accent{fill:none;stroke:var(--accent);stroke-width:2}
+  .d-lbl{fill:var(--muted);font-family:var(--f-mono);font-size:11px}
+  .d-lbl-em{fill:var(--accent);font-family:var(--f-mono);font-size:11px;font-weight:500}
+  .d-arrowhead{fill:var(--muted)}
+  .d-arrowhead-accent{fill:var(--accent)}
+  .d-diamond{fill:var(--surface);stroke:var(--accent);stroke-width:1.75}
+
+  .table-wrap{overflow-x:auto;margin:1.4rem 0;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:520px}
+  caption{caption-side:bottom;text-align:left;padding:.7rem .9rem;color:var(--faint);font-size:.8rem;font-family:var(--f-mono)}
+  th,td{padding:.65rem .9rem;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  thead th{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500;background:var(--surface-2)}
+  tbody tr:last-child td{border-bottom:none}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:.86rem}
+  tbody tr:hover td{background:var(--surface-2)}
+  .row-strong td{font-weight:600;color:var(--ink)}
+  .row-strong td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
+
+  pre{margin:1.3rem 0;padding:1.1rem 1.2rem;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);border-left:2px solid var(--accent);overflow-x:auto;font-family:var(--f-mono);font-size:.82rem;line-height:1.6;color:var(--ink)}
+  pre.tree{white-space:pre;color:var(--muted)}
+  code{font-family:var(--f-mono);font-size:.86em;background:var(--surface-2);padding:.1em .38em;border-radius:5px;border:1px solid var(--line)}
+  pre code{background:none;border:none;padding:0;font-size:1em}
+
+  .grid{display:grid;gap:1rem;margin:1.4rem 0}
+  .grid.two{grid-template-columns:repeat(2,1fr)}
+  .grid.three{grid-template-columns:repeat(3,1fr)}
+  .grid.four{grid-template-columns:repeat(4,1fr)}
+  @media (max-width:760px){ .grid.three,.grid.four{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:520px){ .grid.two,.grid.three,.grid.four{grid-template-columns:1fr} }
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.15rem}
+  .card .k{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:.4rem}
+  .card .v{font-size:.92rem;color:var(--ink)}
+  .card .v strong{display:block;font-family:var(--f-display);font-size:1.15rem;font-weight:600;margin-bottom:.15rem}
+  .phase{position:relative;padding-left:1.4rem}
+  .phase::before{content:"";position:absolute;left:0;top:.3rem;bottom:.3rem;width:3px;border-radius:2px;background:var(--accent)}
+
+  .crops{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.6rem;margin:1.3rem 0}
+  .crop{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:.6rem .8rem}
+  .crop .cn{font-size:.88rem}
+  .crop .cc{font-family:var(--f-mono);font-size:.72rem;color:var(--accent)}
+
+  .badge{display:inline-block;font-family:var(--f-mono);font-size:.68rem;letter-spacing:.05em;padding:.15em .55em;border-radius:5px;border:1px solid currentColor;vertical-align:middle}
+  .badge.g{color:var(--ok)}
+  .badge.a{color:var(--warn)}
+  .badge.r{color:var(--crit)}
+
+  .foot{padding:2.5rem 0 0;color:var(--faint);font-family:var(--f-mono);font-size:.76rem;text-align:center;border-bottom:none}
+  :where(a,button):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+</style>
+
+<header class="top">
+  <div class="brand"><span class="dot"></span> Technical Report</div>
+  <nav>
+    <a href="#sec3">Architecture</a>
+    <a href="#sec4">Dual RAG</a>
+    <a href="#sec5">Data Pipeline</a>
+    <a href="#sec11">Metrics</a>
+    <button class="toggle" id="themeToggle" type="button" aria-label="Toggle colour theme">Theme</button>
+  </nav>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="eyebrow">Conversational AI &nbsp;·&nbsp; Ocean Data</div>
+    <h1>FloatChat: Conversational Oceanographic Intelligence</h1>
+    <p class="lede">A zero-friction assistant that turns ten years of ARGO float depth, temperature, and salinity profiles into plain-language answers — backed by a dual RAG engine that keeps working with no internet and no API credits.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="n">255k+</div><div class="l">Depth profiles</div></div>
+      <div class="stat"><div class="n">2015–25</div><div class="l">Temporal coverage</div></div>
+      <div class="stat"><div class="n">2,060 m</div><div class="l">Max depth span</div></div>
+      <div class="stat"><div class="n">&lt;200 ms</div><div class="l">Local engine latency</div></div>
+    </div>
+    <div class="meta-line">React + Flask proxy &nbsp;·&nbsp; FastAPI + LangChain 0.3.27 &nbsp;·&nbsp; OpenAI GPT-3.5-Turbo &nbsp;·&nbsp; Sentence-Transformers + ChromaDB &nbsp;·&nbsp; PostgreSQL + PostGIS</div>
+
+    <div class="toc">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#sec1"><span class="num">01</span><span>Executive Summary</span></a></li>
+        <li><a href="#sec2"><span class="num">02</span><span>Why This Project</span></a></li>
+        <li><a href="#sec3"><span class="num">03</span><span>Three-Tier Architecture</span></a></li>
+        <li><a href="#sec4"><span class="num">04</span><span>Dual RAG Engine</span></a></li>
+        <li><a href="#sec5"><span class="num">05</span><span>Data Pipeline &amp; Schema</span></a></li>
+        <li><a href="#sec6"><span class="num">06</span><span>Spatio-Temporal Querying</span></a></li>
+        <li><a href="#sec7"><span class="num">07</span><span>API Endpoints</span></a></li>
+        <li><a href="#sec8"><span class="num">08</span><span>Testing Strategy</span></a></li>
+        <li><a href="#sec9"><span class="num">09</span><span>Key Design Decisions</span></a></li>
+        <li><a href="#sec10"><span class="num">10</span><span>Challenges Faced</span></a></li>
+        <li><a href="#sec11"><span class="num">11</span><span>Performance Metrics</span></a></li>
+        <li><a href="#sec12"><span class="num">12</span><span>Future Enhancements &amp; Stack</span></a></li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <section id="sec1">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Executive Summary</h2></div>
+    <div class="prose">
+      <p><strong>FloatChat</strong> democratises access to oceanographic data. The international ARGO program deploys autonomous floats that cycle between the sea surface and 2,000 m depth, recording temperature, salinity, and pressure — but that data is locked in multi-dimensional NetCDF binaries that require specialised tools (Ocean Data View, MATLAB, <code>xarray</code>) to read.</p>
+      <p>FloatChat lets a researcher, climate analyst, or policy maker simply ask <em>"What was the average salinity near Gujarat in winter 2023?"</em> It answers by combining <strong>Retrieval-Augmented Generation</strong>, <strong>natural-language-to-SQL synthesis</strong>, a <strong>local NLP semantic parser</strong>, and an interactive dashboard — with a fully offline fallback so it never depends on paid cloud credits to function.</p>
+    </div>
+    <div class="grid four">
+      <div class="card"><div class="k">Dual engine</div><div class="v"><strong>Online + offline</strong>Cloud LLM path plus a 100% local rule &amp; embeddings engine</div></div>
+      <div class="card"><div class="k">Precision</div><div class="v"><strong>SQL, not vectors</strong>Numerical aggregations run as real SQL to avoid LLM math hallucination</div></div>
+      <div class="card"><div class="k">Transparency</div><div class="v"><strong>Shows the SQL</strong>The generated query is displayed alongside every answer</div></div>
+      <div class="card"><div class="k">Scale</div><div class="v"><strong>255k+ rows</strong>10 years of profiles across 22+ floats, 0–2,060 m depth</div></div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section id="sec2">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Why This Project</h2></div>
+    <div class="prose">
+      <p>Oceanographic monitoring underpins climate research, monsoon forecasting, marine-ecosystem preservation, and maritime navigation. Yet accessing ARGO data presents three obstacles:</p>
+      <ul>
+        <li><strong>Complex binary formats</strong> — data lives in multi-dimensional NetCDF (<code>.nc</code>) files following CF metadata conventions.</li>
+        <li><strong>Steep technical barrier</strong> — analysis requires Ocean Data View, MATLAB, or Python <code>xarray</code> / <code>netcdf4</code>.</li>
+        <li><strong>Disconnected search</strong> — non-technical users cannot ask natural-language questions across depth, region, and season.</li>
+      </ul>
+    </div>
+    <div class="callout">
+      <span class="tag">Design goal</span>
+      <p>Make deep-sea data universally queryable in plain language, with mathematical precision and full auditability — and keep it working when the cloud is unavailable.</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section id="sec3">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Three-Tier Decoupled Architecture</h2></div>
+    <div class="prose">
+      <p>A React dashboard talks to a Flask reverse proxy, which routes each query to one of two intelligence engines — a cloud FastAPI backend or a local Flask fallback — both of which resolve against the same PostgreSQL + PostGIS store of 255,000+ profiles.</p>
+    </div>
+
+    <figure>
+      <div class="fig-frame">
+        <svg viewBox="0 0 900 780" role="img" aria-label="Three-tier architecture. Presentation tier: a React web dashboard on port 3000 fetches through a Flask frontend server. Intelligence tier: a router selects cloud mode or local mode. Cloud mode reaches a FastAPI server on port 8000 that drives a LangChain SQL agent with GPT-3.5-Turbo and a ChromaDB vector store. Local fallback mode reaches a Flask backend on port 5000 that drives a local RAG engine with a SmartOceanQuery regex and spatial parser and a SentenceTransformer all-MiniLM-L6-v2 model. Data tier: both the LangChain agent and the smart-query parser execute SQL against a PostgreSQL plus PostGIS database, and a separate ETL pipeline batch-inserts raw NetCDF files into it.">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="d-arrowhead"/></marker>
+            <marker id="aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="d-arrowhead-accent"/></marker>
+          </defs>
+
+          <rect class="d-band" x="8" y="16" width="884" height="128" rx="12"/>
+          <text class="d-bandlabel" x="30" y="42">Presentation Tier</text>
+          <rect class="d-box" x="120" y="56" width="300" height="70" rx="9"/>
+          <text class="d-title" x="270" y="84" text-anchor="middle">React Web Dashboard</text>
+          <text class="d-sub" x="270" y="104" text-anchor="middle">glassmorphism UI · port 3000</text>
+          <rect class="d-box" x="480" y="56" width="300" height="70" rx="9"/>
+          <text class="d-title" x="630" y="84" text-anchor="middle">Flask Frontend Server</text>
+          <text class="d-sub" x="630" y="104" text-anchor="middle">reverse proxy · SSR templates</text>
+          <path class="d-flow" d="M420 91 L480 91" marker-end="url(#ah)"/>
+
+          <path class="d-flow" d="M630 144 L630 176 L450 176 L450 200" marker-end="url(#ah)"/>
+          <text class="d-lbl" x="462" y="192">HTTP POST /api/query</text>
+
+          <rect class="d-band" x="8" y="206" width="884" height="330" rx="12"/>
+          <text class="d-bandlabel" x="30" y="232">Intelligence &amp; Orchestration Tier</text>
+          <polygon class="d-diamond" points="450,244 530,282 450,320 370,282"/>
+          <text class="d-title" x="450" y="286" text-anchor="middle">Router / mode</text>
+
+          <path class="d-flow-accent" d="M370 282 L200 282 L200 330" marker-end="url(#aha)"/>
+          <text class="d-lbl-em" x="150" y="270">cloud mode</text>
+          <path class="d-flow" d="M530 282 L700 282 L700 330" marker-end="url(#ah)"/>
+          <text class="d-lbl" x="640" y="270">local / fallback</text>
+
+          <rect class="d-box-accent" x="70" y="330" width="300" height="70" rx="9"/>
+          <text class="d-title" x="220" y="358" text-anchor="middle">FastAPI Server (main.py)</text>
+          <text class="d-sub" x="220" y="378" text-anchor="middle">port 8000</text>
+          <rect class="d-box-accent" x="70" y="410" width="145" height="64" rx="9"/>
+          <text class="d-sub" x="142" y="438" text-anchor="middle">LangChain</text>
+          <text class="d-sub" x="142" y="454" text-anchor="middle">SQL agent</text>
+          <rect class="d-box-accent" x="225" y="410" width="145" height="64" rx="9"/>
+          <text class="d-sub" x="297" y="438" text-anchor="middle">ChromaDB</text>
+          <text class="d-sub" x="297" y="454" text-anchor="middle">vector store</text>
+          <path class="d-flow-accent" d="M180 400 L180 410 M297 400 L297 410"/>
+
+          <rect class="d-box" x="530" y="330" width="300" height="70" rx="9"/>
+          <text class="d-title" x="680" y="358" text-anchor="middle">Flask Backend (backend_server.py)</text>
+          <text class="d-sub" x="680" y="378" text-anchor="middle">port 5000</text>
+          <rect class="d-box" x="530" y="410" width="145" height="64" rx="9"/>
+          <text class="d-sub" x="602" y="438" text-anchor="middle">SmartOcean</text>
+          <text class="d-sub" x="602" y="454" text-anchor="middle">regex + spatial</text>
+          <rect class="d-box" x="685" y="410" width="145" height="64" rx="9"/>
+          <text class="d-sub" x="757" y="438" text-anchor="middle">MiniLM-L6-v2</text>
+          <text class="d-sub" x="757" y="454" text-anchor="middle">embeddings</text>
+          <path class="d-flow" d="M602 400 L602 410 M757 400 L757 410"/>
+
+          <path class="d-flow-accent" d="M142 474 L142 560 L440 560" marker-end="url(#aha)"/>
+          <path class="d-flow" d="M602 474 L602 560 L560 560" marker-end="url(#ah)"/>
+
+          <rect class="d-band" x="8" y="546" width="884" height="220" rx="12"/>
+          <text class="d-bandlabel" x="30" y="572">Data Storage &amp; Processing Tier</text>
+          <rect class="d-box-accent" x="330" y="586" width="240" height="72" rx="9"/>
+          <text class="d-title" x="450" y="614" text-anchor="middle">PostgreSQL + PostGIS</text>
+          <text class="d-sub" x="450" y="634" text-anchor="middle">argo_db · profiles table</text>
+          <rect class="d-box" x="120" y="676" width="300" height="66" rx="9"/>
+          <text class="d-title" x="270" y="704" text-anchor="middle">Raw NetCDF (.nc)</text>
+          <text class="d-sub" x="270" y="722" text-anchor="middle">ARGO / INCOIS archives</text>
+          <rect class="d-box" x="480" y="676" width="300" height="66" rx="9"/>
+          <text class="d-title" x="630" y="704" text-anchor="middle">ETL Pipeline</text>
+          <text class="d-sub" x="630" y="722" text-anchor="middle">etl_final.py · batch insert</text>
+          <path class="d-flow" d="M420 709 L480 709" marker-end="url(#ah)"/>
+          <path class="d-flow" d="M630 676 L630 640 L570 640" marker-end="url(#ah)"/>
+        </svg>
+      </div>
+      <figcaption><b>Figure 1 — Request routing.</b> The accent path is the cloud LLM engine; the neutral path is the fully offline fallback. Both converge on the same relational store, so answers are numerically identical regardless of which engine served the query.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 4 -->
+  <section id="sec4">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">Dual RAG Engine</h2></div>
+    <div class="grid two">
+      <div class="card phase">
+        <div class="k">Path A — Online Cloud RAG</div>
+        <div class="v">
+          <ul>
+            <li>FastAPI drives LangChain's SQL Database Agent with OpenAI <code>gpt-3.5-turbo</code>.</li>
+            <li>The agent inspects live database schemas and generates structured SQL.</li>
+            <li>ChromaDB retrieves relevant oceanographic domain metadata for context.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card phase">
+        <div class="k">Path B — Offline Local RAG / Fallback</div>
+        <div class="v">
+          <ul>
+            <li><code>main_local.py</code> / <code>smart_query.py</code> run with no external API.</li>
+            <li><code>SentenceTransformer</code> (<code>all-MiniLM-L6-v2</code>) embeddings + spatio-temporal regex parsing.</li>
+            <li>Maps regions, seasons, and measurement types directly into parameterised SQL.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="prose">
+      <h4>Processing workflow</h4>
+      <ol class="body-list">
+        <li><strong>Query submission</strong> — the user types a natural-language question in the React chat interface.</li>
+        <li><strong>Dual-path processing</strong> — the router picks the cloud agent or the local engine based on configuration and API-key availability.</li>
+        <li><strong>Execution &amp; synthesis</strong> — the database returns numerical results; the engine formats a natural-language response with metadata and the underlying SQL shown for scientific auditability.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section id="sec5">
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">Data Pipeline &amp; Schema</h2></div>
+    <div class="prose"><p>The ETL pipeline (<code>etl_final.py</code>, <code>load_all_incois_data.py</code>) ingests multi-dimensional <code>.nc</code> files, decodes Julian timestamps, flattens depth profiles, normalises coordinates, and bulk-inserts into the <code>profiles</code> table.</p></div>
+    <pre class="tree">[NetCDF (.nc) files]
+       │
+       ▼  xarray extraction: platform ID, lat, lon, time, pressure, temp, salinity
+       ▼  data cleaning: timezone normalization, NaN filtering, QC checks
+       ▼  flattening: 2-D arrays (time × depth) → 1-D relational rows
+       ▼  batch insertion via SQLAlchemy Core (BATCH_SIZE = 50)
+[PostgreSQL `profiles` table]</pre>
+
+    <h4>PostgreSQL schema — <code>profiles</code></h4>
+    <pre><code>CREATE TABLE IF NOT EXISTS profiles (
+    id             SERIAL PRIMARY KEY,
+    filename       VARCHAR(255),
+    float_id       VARCHAR(50),
+    profile_index  INTEGER,
+    depth_index    INTEGER,
+    timestamp      TIMESTAMP,
+    latitude       DOUBLE PRECISION,
+    longitude      DOUBLE PRECISION,
+    pressure       DOUBLE PRECISION,
+    temperature    DOUBLE PRECISION,
+    salinity       DOUBLE PRECISION,
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_profiles_float_id   ON profiles(float_id);
+CREATE INDEX idx_profiles_timestamp  ON profiles(timestamp);
+CREATE INDEX idx_profiles_location   ON profiles(latitude, longitude);
+CREATE INDEX idx_profiles_filename   ON profiles(filename);</code></pre>
+
+    <h4>Pre-mapped geographic bounding boxes — <code>smart_query.py</code></h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Region</th><th class="num">Latitude</th><th class="num">Longitude</th></tr></thead>
+        <tbody>
+          <tr><td>Gujarat Coast</td><td class="num">[20.0, 24.5]</td><td class="num">[68.0, 74.5]</td></tr>
+          <tr><td>Arabian Sea</td><td class="num">[10.0, 25.0]</td><td class="num">[60.0, 75.0]</td></tr>
+          <tr><td>Bay of Bengal</td><td class="num">[5.0, 22.0]</td><td class="num">[80.0, 95.0]</td></tr>
+          <tr><td>Indian Ocean</td><td class="num">[&minus;40.0, 25.0]</td><td class="num">[20.0, 120.0]</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section id="sec6">
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title">Spatio-Temporal Intelligent Querying</h2></div>
+    <div class="grid three">
+      <div class="card"><div class="k">Named regions</div><div class="v">Gujarat, Arabian Sea, Bay of Bengal, Indian Ocean, Chennai, Mumbai — resolved to SQL <code>BETWEEN</code> latitude / longitude clauses.</div></div>
+      <div class="card"><div class="k">Seasonal timeframes</div><div class="v">Winter, Monsoon, Summer, Spring, Autumn — plus specific calendar years 2015–2025.</div></div>
+      <div class="card"><div class="k">Depth resolution</div><div class="v">Surface layer (0–10 m), shallow profiles (0–50 m), and deep-sea levels down to 2,060 m.</div></div>
+    </div>
+    <div class="prose">
+      <p>Query and SQL transparency: the generated SQL is displayed alongside the conversational answer so every result is scientifically auditable.</p>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section id="sec7">
+    <div class="sec-head"><span class="sec-num">07</span><h2 class="sec-title">API Endpoints</h2></div>
+    <h4>Frontend proxy — <code>http://localhost:3000</code></h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>GET</code></td><td><code>/</code></td><td>Project landing page</td></tr>
+          <tr><td><code>GET</code></td><td><code>/home</code></td><td>Main dashboard &amp; chat interface</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/query</code></td><td>Proxies chat requests to the backend engine</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/health</code></td><td>Frontend + backend connectivity check</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/dummy-data</code></td><td>Sample oceanographic records for UI testing</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h4>Local RAG backend — <code>http://localhost:5000</code></h4>
+    <pre><code>POST /api/rag-answer   {"question": "What is the salinity near Gujarat in winter 2023?"}
+GET  /api/health       database and embedding-model status
+GET  /                 API metadata and endpoint index</code></pre>
+    <h4>FastAPI cloud RAG — <code>http://localhost:8000</code></h4>
+    <pre><code>POST /query   {"query": "How many ARGO floats are in the database?"}
+GET  /health  backend system status
+GET  /docs    interactive Swagger UI
+GET  /redoc   ReDoc technical documentation</code></pre>
+  </section>
+
+  <!-- 8 -->
+  <section id="sec8">
+    <div class="sec-head"><span class="sec-num">08</span><h2 class="sec-title">Testing Strategy &amp; Verification</h2></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Suite</th><th>What it validates</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Database &amp; data</strong> (<code>test_data.py</code>)</td><td>Table counts, null percentages, temperature / salinity ranges, coordinates within standard geographic bounds</td></tr>
+          <tr><td><strong>RAG pipeline</strong> (<code>test_rag.py</code>, <code>enhanced_test_rag.py</code>)</td><td>End-to-end QA across basic counts, statistical aggregations, and spatial queries; fallback triggers when the LLM endpoint is unreachable</td></tr>
+          <tr><td><strong>OpenAI auth</strong> (<code>test_openai_key.py</code>)</td><td>Credential validity and available token quota</td></tr>
+          <tr><td><strong>Schema unit tests</strong> (<code>create_test_table.py</code>)</td><td>Safe creation and teardown of test tables and indexes</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section id="sec9">
+    <div class="sec-head"><span class="sec-num">09</span><h2 class="sec-title">Key Design Decisions</h2></div>
+    <div class="grid two">
+      <div class="card"><div class="k">Hybrid dual-engine RAG</div><div class="v">Rather than depend solely on paid cloud LLMs, a deterministic rule-based SQL generator and local transformer fallback keep the system available with no credits or connectivity.</div></div>
+      <div class="card"><div class="k">Decoupled frontend proxy</div><div class="v">The Flask frontend proxies backend microservices — no CORS issues, and backends can be swapped without touching UI code.</div></div>
+      <div class="card"><div class="k">Direct SQL over vector chunking</div><div class="v">Numerical time-series needs exact <code>AVG</code> / <code>MIN</code> / <code>MAX</code>. Generating SQL over a relational DB prevents LLM math hallucination; ChromaDB handles semantic metadata search.</div></div>
+      <div class="card"><div class="k">Spatial bounding-box indexing</div><div class="v">Pre-defined oceanographic coordinate boxes plus composite B-tree indexes give sub-second spatio-temporal lookups over hundreds of thousands of rows.</div></div>
+      <div class="card"><div class="k">Chunked ingestion</div><div class="v"><code>BATCH_SIZE = 50</code> with periodic commits and explicit dataset closing handles tens of thousands of NetCDF files without Python memory exhaustion.</div></div>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section id="sec10">
+    <div class="sec-head"><span class="sec-num">10</span><h2 class="sec-title">Challenges Faced &amp; Solutions</h2></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Challenge</th><th>Impact</th><th>Engineering solution</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Inconsistent NetCDF dimensions</strong></td><td>Some files use <code>N_PROF</code> / <code>N_LEVELS</code>, others <code>TIME</code> / <code>PRES</code> / <code>depth</code></td><td>Dynamic dimension inspection in <code>etl_final.py</code> reads <code>ds.dims</code> and adapts coordinate extraction automatically</td></tr>
+          <tr><td><strong>OpenAI quota &amp; rate limits</strong></td><td>External LLM calls could fail during demos or peak traffic</td><td><code>main_local.py</code> / <code>smart_query.py</code> — local SentenceTransformer + regex SQL builders as a zero-cost fallback</td></tr>
+          <tr><td><strong>High memory during ingestion</strong></td><td>Ingesting tens of thousands of files caused out-of-memory errors</td><td>Streaming generator chunking with periodic transaction commits and explicit dataset closing</td></tr>
+          <tr><td><strong>Geographic ambiguity</strong></td><td>Users say "Gujarat" or "Arabian Sea" without coordinates</td><td>Bounding-box knowledge dictionary translating regional names into SQL <code>BETWEEN</code> clauses</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section id="sec11">
+    <div class="sec-head"><span class="sec-num">11</span><h2 class="sec-title">Performance Metrics</h2></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr class="row-strong"><td>Total ingested measurements</td><td>127,825 – 255,650+ records</td></tr>
+          <tr><td>Temporal reach</td><td>10 years — September 2015 to September 2025</td></tr>
+          <tr><td>Float fleet coverage</td><td>22+ unique ARGO profiling floats (Indian &amp; Southern Oceans)</td></tr>
+          <tr><td>Depth range</td><td>0 m (surface) to 2,060 m</td></tr>
+          <tr><td>Data quality</td><td>&gt; 98% valid temperature &amp; salinity readings</td></tr>
+          <tr><td>Response time — local engine</td><td>&lt; 200 ms</td></tr>
+          <tr><td>Response time — cloud LangChain LLM</td><td>2.0 – 4.5 s</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 12 -->
+  <section id="sec12">
+    <div class="sec-head"><span class="sec-num">12</span><h2 class="sec-title">Future Enhancements &amp; Tech Stack</h2></div>
+    <div class="grid two">
+      <div class="card"><div class="k">01 · Live telemetry</div><div class="v">Real-time INCOIS satellite ingest webhooks that parse new float profiles as they surface.</div></div>
+      <div class="card"><div class="k">02 · Geospatial map</div><div class="v">Leaflet / Mapbox trajectory visualiser with depth–temperature heatmaps in the dashboard.</div></div>
+      <div class="card"><div class="k">03 · BGC-ARGO</div><div class="v">Expand to dissolved oxygen, pH, nitrate, and chlorophyll-A parameters.</div></div>
+      <div class="card"><div class="k">04 · Anomaly detection</div><div class="v">Agentic background jobs that flag marine heatwaves and alert researchers.</div></div>
+    </div>
+    <div class="grid three">
+      <div class="card"><div class="k">Frontend</div><div class="v">React.js, HTML5 / CSS3 glassmorphism, Vanilla JS ES6+, Flask (proxy &amp; SSR)</div></div>
+      <div class="card"><div class="k">Backend &amp; AI</div><div class="v">FastAPI, Flask, LangChain 0.3.27, OpenAI GPT-3.5-Turbo, Sentence-Transformers <code>all-MiniLM-L6-v2</code>, ChromaDB</div></div>
+      <div class="card"><div class="k">Data &amp; DB</div><div class="v">xarray, netCDF4, Pandas, NumPy, SQLAlchemy, PostgreSQL 15+ with PostGIS</div></div>
+    </div>
+    <h4>Setup</h4>
+    <pre><code>git clone &lt;repo-url&gt; &amp;&amp; cd floatchat_prototype
+python -m venv venv &amp;&amp; .\venv\Scripts\activate
+pip install -r requirements.txt
+
+python etl_final.py          # run the ETL pipeline
+python launch.py             # option 3 → start backend + frontend
+# Landing  http://localhost:3000
+# Docs     http://localhost:8000/docs</code></pre>
+  </section>
+
+  <p class="foot">FloatChat · AI-Powered Conversational Oceanographic Intelligence System · Technical Report</p>
+</main>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('themeToggle');
+    function current(){
+      return root.getAttribute('data-theme') ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    }
+    btn.addEventListener('click', function(){
+      var next = current() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('fc-theme', next); } catch (e) {}
+    });
+    try {
+      var saved = localStorage.getItem('fc-theme');
+      if (saved) root.setAttribute('data-theme', saved);
+    } catch (e) {}
+  })();
+</script>

@@ -3,7 +3,14 @@ title: "Zero-Day: A Zero-Day Attack Detection & Mitigation Framework for Kuberne
 description: "A six-layer framework that models Kubernetes container behaviour as a temporal graph, scores it with a TGNN + 3-model ensemble, explains every alert with XAI, and safely auto-contains threats through a Kubernetes operator."
 date: "2026-08-02"
 tags: ["Graph ML", "Kubernetes Security", "Explainable AI", "TGNN"]
-reportUrl: "/reports/zero-day-detection-report.pdf"
+pinned: 1
+downloads:
+  - label: "Read Online"
+    url: "/reports/zeroday/zero-day-report.html"
+  - label: "Project Report"
+    url: "/reports/zeroday/zeroday-report.pdf"
+  - label: "IEEE Paper"
+    url: "/reseach/zero-day/zero-day-IEEE-research-paper.pdf"
 ---
 
 A comprehensive security framework combining Temporal Graph Neural Networks (TGNN), real-time monitoring, and automated safe containment for detecting and mitigating zero-day attacks in Kubernetes environments — featuring PyTorch, PyTorch Geometric, Prometheus, Grafana, Go Operators, multi-source telemetry ingestion, Explainable AI, MITRE ATT&CK attack playbooks, and multi-tenant SaaS management.
@@ -112,7 +119,7 @@ The **Graph Builder** service (`graph_builder/`) converts raw telemetry events i
 }
 ```
 
-**Outputs**: 
+**Outputs**:
 - `window_<timestamp>.nodes.parquet` — Node features (pod_name, namespace, total bytes, outgoing_unique_dst, flow_count)
 - `window_<timestamp>.edges.parquet` — Edge features (src→dst pairs with cumulative bytes and flow count)
 
@@ -467,20 +474,20 @@ Zero-Day includes a comprehensive multi-level testing strategy:
 |-----------|-------|----------|
 | **Unit Tests** (graph_builder) | Sessionization, graph construction, Parquet I/O, window boundaries | ~90% |
 | **Integration Tests** (ML pipeline) | Data generation, model training, inference API, model persistence | ~85% |
-| **End-to-End Tests** (scripts) | 7 tests across the full stack | **All 7 PASSED ✅** |
+| **End-to-End Tests** (scripts) | 7 tests across the full stack | **All 7 PASSED ** |
 | **ML Validation** | Precision, recall, F1, ROC-AUC, MTTD on attack vs benign windows | ROC-AUC: 0.92 |
 | **Attack Simulations** | 4 MITRE ATT&CK playbooks (T1610, T1548, T1021, T1041) | Containment Success: 85% |
 
 ### End-to-End Test Results
 
 ```
-[TEST 1] Docker Compose Services      ✅ All services running
-[TEST 2] Metrics Exporter Health       ✅ Exporter exposing zero_day metrics (15 found)
-[TEST 3] Prometheus Scraping           ✅ Prometheus scraping metrics
-[TEST 4] Grafana Authentication        ✅ Grafana login successful (admin:admin)
-[TEST 5] Dashboard Import              ✅ Dashboard imported and accessible
-[TEST 6] Demo Execution                ✅ Demo executed, metrics updated (7,746 events)
-[TEST 7] Attack Demo                   ✅ Attack demo successful, alerts incremented (400)
+[TEST 1] Docker Compose Services       All services running
+[TEST 2] Metrics Exporter Health        Exporter exposing zero_day metrics (15 found)
+[TEST 3] Prometheus Scraping            Prometheus scraping metrics
+[TEST 4] Grafana Authentication         Grafana login successful (admin:admin)
+[TEST 5] Dashboard Import               Dashboard imported and accessible
+[TEST 6] Demo Execution                 Demo executed, metrics updated (7,746 events)
+[TEST 7] Attack Demo                    Attack demo successful, alerts incremented (400)
 ```
 
 ### ML Validation Metrics
@@ -664,14 +671,14 @@ helm install zero-day ./helm/zero-day-saas \
 
 | Metric | Actual | Target |
 |--------|--------|--------|
-| **Startup Time** | < 30 seconds | < 1 minute ✅ |
-| **Dashboard Load** | < 200ms | < 500ms ✅ |
-| **Metrics Latency** | < 5 seconds | < 10 seconds ✅ |
-| **Alert Detection** | Real-time (< 1s) | < 100ms ✅ |
-| **Inference Latency** | 50ms | < 100ms ✅ |
-| **Services Stability** | 100% uptime | 99.9% ✅ |
-| **ROC-AUC Score** | 0.92 | > 0.90 ✅ |
-| **Containment Success** | 85% | > 80% ✅ |
+| **Startup Time** | < 30 seconds | < 1 minute |
+| **Dashboard Load** | < 200ms | < 500ms |
+| **Metrics Latency** | < 5 seconds | < 10 seconds |
+| **Alert Detection** | Real-time (< 1s) | < 100ms |
+| **Inference Latency** | 50ms | < 100ms |
+| **Services Stability** | 100% uptime | 99.9% |
+| **ROC-AUC Score** | 0.92 | > 0.90 |
+| **Containment Success** | 85% | > 80% |
 
 ## IEEE Research Paper
 

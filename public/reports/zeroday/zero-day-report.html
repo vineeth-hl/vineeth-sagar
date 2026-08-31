@@ -1,0 +1,777 @@
+<title>Zero-Day — Kubernetes Attack Detection &amp; Mitigation Framework</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    --paper:#f5f6f8;
+    --surface:#ffffff;
+    --surface-2:#eceef3;
+    --ink:#191c22;
+    --muted:#565f6d;
+    --faint:#8a93a3;
+    --line:#d9dde5;
+    --accent:#b4232a;
+    --accent-soft:#f7e3e3;
+    --warn:#9a5f0d;
+    --crit:#a63b2b;
+    --ok:#1f7a43;
+    --shadow:0 1px 2px rgba(20,24,30,.04), 0 8px 24px -12px rgba(20,24,30,.14);
+
+    --f-display:"Fraunces", Georgia, "Times New Roman", serif;
+    --f-body:"IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+
+    --measure:66ch;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0f1216;
+      --surface:#161a20;
+      --surface-2:#1b2029;
+      --ink:#e7eaef;
+      --muted:#a0a9b8;
+      --faint:#6c7686;
+      --line:#2a313c;
+      --accent:#ef6b6b;
+      --accent-soft:#2a1618;
+      --warn:#d69a4e;
+      --crit:#e77762;
+      --ok:#5bbd83;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0f1216;
+    --surface:#161a20;
+    --surface-2:#1b2029;
+    --ink:#e7eaef;
+    --muted:#a0a9b8;
+    --faint:#6c7686;
+    --line:#2a313c;
+    --accent:#ef6b6b;
+    --accent-soft:#2a1618;
+    --warn:#d69a4e;
+    --crit:#e77762;
+    --ok:#5bbd83;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.5);
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:var(--f-body);font-size:16px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+
+  header.top{
+    position:sticky;top:0;z-index:50;
+    display:flex;align-items:center;justify-content:space-between;gap:1rem;
+    padding:.7rem clamp(1rem,4vw,2.4rem);
+    background:color-mix(in srgb, var(--paper) 86%, transparent);
+    backdrop-filter:saturate(140%) blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex;align-items:center;gap:.6rem;font-family:var(--f-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  .top nav{display:flex;gap:.4rem;align-items:center}
+  .top nav a{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;color:var(--muted);text-decoration:none;padding:.3rem .55rem;border-radius:6px}
+  .top nav a:hover{color:var(--ink);background:var(--surface-2)}
+  .toggle{
+    font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;
+    background:var(--surface);color:var(--muted);border:1px solid var(--line);
+    padding:.35rem .6rem;border-radius:7px;cursor:pointer;
+  }
+  .toggle:hover{color:var(--ink);border-color:var(--accent)}
+
+  main{max-width:960px;margin:0 auto;padding:0 clamp(1rem,4vw,2.4rem) 6rem}
+  .prose{max-width:var(--measure)}
+  p{margin:0 0 1rem}
+  a{color:var(--accent);text-underline-offset:2px}
+
+  .hero{
+    padding:clamp(2.6rem,7vw,5rem) 0 clamp(1.8rem,4vw,3rem);
+    border-bottom:1px solid var(--line);
+    animation:rise .7s cubic-bezier(.2,.7,.2,1) both;
+  }
+  @media (prefers-reduced-motion: reduce){ .hero{animation:none} }
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .eyebrow{
+    font-family:var(--f-mono);font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:1.2rem;display:flex;align-items:center;gap:.7rem;
+  }
+  .eyebrow::before{content:"";width:34px;height:1px;background:var(--accent)}
+  h1{
+    font-family:var(--f-display);font-weight:600;
+    font-size:clamp(2rem,6vw,3.4rem);line-height:1.04;letter-spacing:-.01em;
+    margin:0 0 1rem;text-wrap:balance;
+  }
+  .lede{font-size:clamp(1.05rem,2.4vw,1.28rem);color:var(--muted);max-width:56ch;margin-bottom:2rem}
+  .stats{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  }
+  .stat{background:var(--surface);padding:1.1rem 1.15rem}
+  .stat .n{font-family:var(--f-display);font-weight:600;font-size:1.6rem;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .stat .l{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-top:.5rem}
+  .meta-line{margin-top:1.5rem;font-family:var(--f-mono);font-size:.74rem;color:var(--faint);letter-spacing:.04em}
+  @media (max-width:680px){ .stats{grid-template-columns:repeat(2,1fr)} }
+
+  .toc{
+    margin:2.5rem 0 0;padding:1.4rem 1.5rem;
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  }
+  .toc h2{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:0 0 1rem}
+  .toc ol{margin:0;padding:0;list-style:none;columns:2;column-gap:2.5rem}
+  .toc li{margin:0 0 .5rem;break-inside:avoid}
+  .toc a{display:flex;gap:.7rem;text-decoration:none;color:var(--ink);font-size:.92rem}
+  .toc a:hover{color:var(--accent)}
+  .toc a .num{font-family:var(--f-mono);font-size:.78rem;color:var(--faint);min-width:1.4rem}
+  @media (max-width:640px){ .toc ol{columns:1} }
+
+  section{padding:clamp(2.4rem,5vw,3.6rem) 0;border-bottom:1px solid var(--line)}
+  .sec-head{margin-bottom:1.6rem}
+  .sec-num{font-family:var(--f-mono);font-size:.76rem;letter-spacing:.14em;color:var(--accent);display:block;margin-bottom:.5rem}
+  h2.sec-title{
+    font-family:var(--f-display);font-weight:600;
+    font-size:clamp(1.5rem,3.6vw,2.1rem);line-height:1.1;letter-spacing:-.01em;
+    margin:0;text-wrap:balance;
+  }
+  h3{
+    font-family:var(--f-body);font-weight:600;font-size:1.06rem;
+    margin:2.2rem 0 .7rem;color:var(--ink);
+    display:flex;align-items:baseline;gap:.6rem;
+  }
+  h3 .h3num{font-family:var(--f-mono);font-size:.8rem;color:var(--accent);font-weight:500}
+  h4{font-family:var(--f-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:1.6rem 0 .6rem}
+
+  ul,ol.body-list{margin:0 0 1rem;padding-left:1.2rem}
+  li{margin:.35rem 0}
+  strong{font-weight:600;color:var(--ink)}
+  .prose ul li::marker{color:var(--accent)}
+
+  .callout{
+    border-left:2px solid var(--accent);background:var(--accent-soft);
+    padding:1rem 1.2rem;border-radius:0 10px 10px 0;margin:1.4rem 0;max-width:var(--measure);
+  }
+  .callout p:last-child{margin:0}
+  .callout .tag{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:.35rem}
+
+  figure{margin:2rem 0;padding:0}
+  .fig-frame{
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:clamp(1rem,3vw,1.8rem);box-shadow:var(--shadow);overflow-x:auto;
+  }
+  figure svg{display:block;width:100%;height:auto;min-width:540px;color:var(--ink)}
+  figcaption{margin-top:.9rem;font-size:.86rem;color:var(--muted);font-family:var(--f-body);max-width:var(--measure)}
+  figcaption b{color:var(--ink);font-weight:600}
+
+  .d-band{fill:var(--surface-2);stroke:var(--line);stroke-width:1}
+  .d-bandlabel{fill:var(--faint);font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+  .d-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+  .d-box-accent{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.75}
+  .d-title{fill:var(--ink);font-family:var(--f-body);font-size:13px;font-weight:600}
+  .d-sub{fill:var(--muted);font-family:var(--f-mono);font-size:11px}
+  .d-flow{fill:none;stroke:var(--muted);stroke-width:1.5}
+  .d-flow-accent{fill:none;stroke:var(--accent);stroke-width:2}
+  .d-lbl{fill:var(--muted);font-family:var(--f-mono);font-size:11px}
+  .d-lbl-em{fill:var(--accent);font-family:var(--f-mono);font-size:11px;font-weight:500}
+  .d-arrowhead{fill:var(--muted)}
+  .d-arrowhead-accent{fill:var(--accent)}
+  .d-diamond{fill:var(--surface);stroke:var(--accent);stroke-width:1.75}
+
+  .table-wrap{overflow-x:auto;margin:1.4rem 0;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:520px}
+  caption{caption-side:bottom;text-align:left;padding:.7rem .9rem;color:var(--faint);font-size:.8rem;font-family:var(--f-mono)}
+  th,td{padding:.65rem .9rem;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  thead th{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500;background:var(--surface-2)}
+  tbody tr:last-child td{border-bottom:none}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:.86rem}
+  tbody tr:hover td{background:var(--surface-2)}
+  .row-strong td{font-weight:600;color:var(--ink)}
+  .row-strong td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
+
+  pre{
+    margin:1.3rem 0;padding:1.1rem 1.2rem;border-radius:12px;
+    background:var(--surface-2);border:1px solid var(--line);border-left:2px solid var(--accent);
+    overflow-x:auto;font-family:var(--f-mono);font-size:.82rem;line-height:1.6;color:var(--ink);
+  }
+  pre.tree{white-space:pre;color:var(--muted)}
+  code{font-family:var(--f-mono);font-size:.86em;background:var(--surface-2);padding:.1em .38em;border-radius:5px;border:1px solid var(--line)}
+  pre code{background:none;border:none;padding:0;font-size:1em}
+
+  .equation{
+    margin:1.3rem 0;padding:1.2rem 1.3rem;border-radius:12px;
+    background:var(--surface);border:1px solid var(--line);
+    font-family:var(--f-display);font-size:1.08rem;text-align:center;overflow-x:auto;color:var(--ink);
+  }
+  .equation .var{font-style:italic}
+  .equation .where{display:block;margin-top:.6rem;font-family:var(--f-mono);font-size:.76rem;color:var(--muted);font-style:normal}
+  .frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;margin:0 .25em}
+  .frac>span:first-child{border-bottom:1.5px solid currentColor;padding:0 .35em}
+  .frac>span:last-child{padding:.05em .35em 0}
+  .bigop{font-size:1.7em;vertical-align:-.32em;line-height:1;font-family:Georgia,serif}
+
+  .grid{display:grid;gap:1rem;margin:1.4rem 0}
+  .grid.two{grid-template-columns:repeat(2,1fr)}
+  .grid.three{grid-template-columns:repeat(3,1fr)}
+  .grid.four{grid-template-columns:repeat(4,1fr)}
+  @media (max-width:760px){ .grid.three,.grid.four{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:520px){ .grid.two,.grid.three,.grid.four{grid-template-columns:1fr} }
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.15rem}
+  .card .k{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:.4rem}
+  .card .v{font-size:.92rem;color:var(--ink)}
+  .card .v strong{display:block;font-family:var(--f-display);font-size:1.15rem;font-weight:600;margin-bottom:.15rem}
+  .phase{position:relative;padding-left:1.4rem}
+  .phase::before{content:"";position:absolute;left:0;top:.3rem;bottom:.3rem;width:3px;border-radius:2px;background:var(--accent)}
+
+  .badge{display:inline-block;font-family:var(--f-mono);font-size:.68rem;letter-spacing:.05em;padding:.15em .55em;border-radius:5px;border:1px solid currentColor;vertical-align:middle}
+  .badge.g{color:var(--ok)}
+  .badge.a{color:var(--warn)}
+  .badge.r{color:var(--crit)}
+
+  .foot{padding:2.5rem 0 0;color:var(--faint);font-family:var(--f-mono);font-size:.76rem;text-align:center;border-bottom:none}
+  :where(a,button):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+</style>
+
+<header class="top">
+  <div class="brand"><span class="dot"></span> Technical Report</div>
+  <nav>
+    <a href="#sec3">Architecture</a>
+    <a href="#sec5">ML Models</a>
+    <a href="#sec8">Containment</a>
+    <a href="#sec11">Results</a>
+    <button class="toggle" id="themeToggle" type="button" aria-label="Toggle colour theme">Theme</button>
+  </nav>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="eyebrow">Cloud-Native Security &nbsp;·&nbsp; 2026</div>
+    <h1>Zero-Day: Attack Detection &amp; Mitigation for Kubernetes</h1>
+    <p class="lede">A production-grade framework that models how containers interact over time with a Temporal Graph Neural Network, explains every alert, and contains threats through a safe, human-approved Kubernetes operator — signature-less by design.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="n">0.92</div><div class="l">ROC-AUC</div></div>
+      <div class="stat"><div class="n">&lt;1 s</div><div class="l">Mean time to detect</div></div>
+      <div class="stat"><div class="n">4 + 1</div><div class="l">Models + ensemble</div></div>
+      <div class="stat"><div class="n">85%</div><div class="l">Containment success</div></div>
+    </div>
+    <div class="meta-line">v1.0.0 &nbsp;·&nbsp; PyTorch + PyTorch Geometric &nbsp;·&nbsp; Go / controller-runtime &nbsp;·&nbsp; Prometheus + Grafana &nbsp;·&nbsp; Strimzi Kafka</div>
+
+    <div class="toc">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#sec1"><span class="num">01</span><span>Executive Summary</span></a></li>
+        <li><a href="#sec2"><span class="num">02</span><span>Why This Project</span></a></li>
+        <li><a href="#sec3"><span class="num">03</span><span>Six-Layer System Architecture</span></a></li>
+        <li><a href="#sec4"><span class="num">04</span><span>Temporal Graph Construction Engine</span></a></li>
+        <li><a href="#sec5"><span class="num">05</span><span>ML Anomaly Detection &amp; Ensemble</span></a></li>
+        <li><a href="#sec6"><span class="num">06</span><span>Explainable AI Integration</span></a></li>
+        <li><a href="#sec7"><span class="num">07</span><span>Red-Team Attack Playbooks</span></a></li>
+        <li><a href="#sec8"><span class="num">08</span><span>Safe Automated Containment</span></a></li>
+        <li><a href="#sec9"><span class="num">09</span><span>Monitoring &amp; Visualization</span></a></li>
+        <li><a href="#sec10"><span class="num">10</span><span>Multi-Tenant SaaS Layer</span></a></li>
+        <li><a href="#sec11"><span class="num">11</span><span>Experimental Results</span></a></li>
+        <li><a href="#sec12"><span class="num">12</span><span>Key Design Decisions</span></a></li>
+        <li><a href="#sec13"><span class="num">13</span><span>Challenges &amp; Solutions</span></a></li>
+        <li><a href="#sec14"><span class="num">14</span><span>Tech Stack &amp; Deployment</span></a></li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <section id="sec1">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Executive Summary</h2></div>
+    <div class="prose">
+      <p><strong>Zero-Day</strong> is a six-layer security framework for detecting and mitigating zero-day attacks in Kubernetes clusters. Because zero-day exploits have no known signature, the system abandons rule matching entirely and instead learns the <strong>normal shape of container behaviour</strong> — who talks to whom, on what ports, with what volume, in what sequence — then flags deviations in real time.</p>
+      <p>It ingests multi-source telemetry (audit logs, network flows, eBPF syscalls), builds overlapping temporal graph windows, scores them with a four-model ensemble anchored by a <strong>Temporal Graph Neural Network</strong>, attaches an <strong>explainable</strong> reason to every alert, and routes high-confidence detections to a Kubernetes-native <strong>containment operator</strong> that acts only after a human approval token is supplied.</p>
+    </div>
+    <div class="grid four">
+      <div class="card"><div class="k">Detection</div><div class="v"><strong>Graph-based</strong>TGNN with graph attention + sinusoidal temporal encoding captures lateral movement flat models miss</div></div>
+      <div class="card"><div class="k">Explainability</div><div class="v"><strong>SHAP + gradients</strong>Feature attributions and suspicious-neighbour isolation on every alert</div></div>
+      <div class="card"><div class="k">Response</div><div class="v"><strong>Safe by default</strong>Dry-run mode, confidence &ge; 0.7 gate, and approval-token workflow before enforcement</div></div>
+      <div class="card"><div class="k">Operations</div><div class="v"><strong>Full stack</strong>8-panel Grafana dashboard, Docker Compose PoC, Helm production chart</div></div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section id="sec2">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Why This Project — The Zero-Day Problem</h2></div>
+    <div class="prose">
+      <p>In cloud-native environments, Kubernetes clusters are under constant threat, and the most dangerous threats are the ones with no patch and no signature. Without an intelligent detection system, teams face five compounding failures:</p>
+      <ul>
+        <li><strong>Invisible attacks</strong> — container breakouts and supply-chain compromises are virtually undetectable by static rules.</li>
+        <li><strong>Delayed response</strong> — breaches go unnoticed for weeks, allowing lateral movement across the cluster (MITRE ATT&amp;CK T1021).</li>
+        <li><strong>Blast radius</strong> — a compromised pod escalates privileges (T1548), reads secrets, and spreads before anyone intervenes.</li>
+        <li><strong>Operational blindness</strong> — thousands of flows, syscalls, and audit events per second with no way to separate normal from malicious.</li>
+        <li><strong>No explainability</strong> — even when an anomaly fires, SOC teams cannot see <em>why</em>, producing alert fatigue.</li>
+      </ul>
+    </div>
+    <div class="callout">
+      <span class="tag">Design goal</span>
+      <p>Detect unknown attacks from behaviour alone, explain each decision to an analyst, and contain the threat automatically — while keeping a human in the loop for every enforcement action.</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section id="sec3">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">Six-Layer System Architecture</h2></div>
+    <div class="prose">
+      <p>The system separates concerns into six independently deployable layers. Docker Compose orchestrates the local proof-of-concept; Helm charts and Kubernetes manifests handle production. A single telemetry event travels the full path below.</p>
+    </div>
+
+    <figure>
+      <div class="fig-frame">
+        <svg viewBox="0 0 900 1180" role="img" aria-label="Six-layer architecture: data ingestion of Kubernetes audit logs, network flows and eBPF syscalls into Kafka or JSONL files; a stream-processing layer that sessionizes events into 60-second sliding-window graphs stored as Parquet; an ML inference layer running Autoencoder, LSTM-AE, DeepLog and TGNN in parallel with ensemble voting; a containment and response layer implemented as a Go Kubernetes operator with NetworkPolicy, pod eviction and Istio blackhole actions gated by a 0.7 confidence threshold and approval tokens; an observability layer with Prometheus, Grafana, Elasticsearch and Jaeger; and a UI and SaaS management layer with a Flask web UI and multi-tenant billing API.">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="d-arrowhead"/></marker>
+            <marker id="aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="d-arrowhead-accent"/></marker>
+          </defs>
+
+          <rect class="d-band" x="8" y="16" width="884" height="150" rx="12"/>
+          <text class="d-bandlabel" x="30" y="42">1 — Data Ingestion Layer</text>
+          <rect class="d-box" x="60" y="58" width="240" height="90" rx="9"/>
+          <text class="d-title" x="180" y="88" text-anchor="middle">K8s Audit Logs</text>
+          <text class="d-sub" x="180" y="108" text-anchor="middle">API server events</text>
+          <text class="d-sub" x="180" y="124" text-anchor="middle">ISO-8601 / epoch parse</text>
+          <rect class="d-box" x="330" y="58" width="240" height="90" rx="9"/>
+          <text class="d-title" x="450" y="88" text-anchor="middle">Cilium / Hubble Flows</text>
+          <text class="d-sub" x="450" y="108" text-anchor="middle">5-tuple network flows</text>
+          <text class="d-sub" x="450" y="124" text-anchor="middle">bytes in / out</text>
+          <rect class="d-box" x="600" y="58" width="240" height="90" rx="9"/>
+          <text class="d-title" x="720" y="88" text-anchor="middle">eBPF Syscalls</text>
+          <text class="d-sub" x="720" y="108" text-anchor="middle">container-level</text>
+          <text class="d-sub" x="720" y="124" text-anchor="middle">Kafka (Strimzi) / JSONL</text>
+
+          <path class="d-flow" d="M450 166 L450 210" marker-end="url(#ah)"/>
+          <text class="d-lbl" x="462" y="192">unified event stream</text>
+
+          <rect class="d-band" x="8" y="216" width="884" height="132" rx="12"/>
+          <text class="d-bandlabel" x="30" y="242">2 — Stream Processing Layer · Temporal Graph Builder</text>
+          <rect class="d-box" x="120" y="258" width="660" height="72" rx="9"/>
+          <text class="d-sub" x="450" y="283" text-anchor="middle">sessionize by container_id &amp; 5-tuple · sliding windows (60 s window, 30 s step)</text>
+          <text class="d-sub" x="450" y="301" text-anchor="middle">NetworkX directed graphs → Parquet snapshots · background auto-flush thread</text>
+
+          <path class="d-flow" d="M450 348 L450 392" marker-end="url(#ah)"/>
+          <text class="d-lbl" x="462" y="374">window_&lt;ts&gt;.nodes.parquet + .edges.parquet</text>
+
+          <rect class="d-band" x="8" y="398" width="884" height="220" rx="12"/>
+          <text class="d-bandlabel" x="30" y="424">3 — ML Inference Layer · parallel scoring ensemble</text>
+          <rect class="d-box" x="60" y="442" width="180" height="70" rx="9"/>
+          <text class="d-title" x="150" y="470" text-anchor="middle">Autoencoder</text>
+          <text class="d-sub" x="150" y="490" text-anchor="middle">node features</text>
+          <rect class="d-box" x="255" y="442" width="180" height="70" rx="9"/>
+          <text class="d-title" x="345" y="470" text-anchor="middle">LSTM-AE</text>
+          <text class="d-sub" x="345" y="490" text-anchor="middle">temporal volume</text>
+          <rect class="d-box" x="450" y="442" width="180" height="70" rx="9"/>
+          <text class="d-title" x="540" y="470" text-anchor="middle">DeepLog</text>
+          <text class="d-sub" x="540" y="490" text-anchor="middle">log sequences</text>
+          <rect class="d-box-accent" x="645" y="442" width="195" height="70" rx="9"/>
+          <text class="d-title" x="742" y="470" text-anchor="middle">TGNN</text>
+          <text class="d-sub" x="742" y="490" text-anchor="middle">graph + time</text>
+          <path class="d-flow-accent" d="M150 512 L150 540 L742 540 L742 512 M450 540 L450 566" marker-end="url(#aha)"/>
+          <text class="d-lbl-em" x="462" y="560">ensemble vote → anomaly score 0.0–1.0</text>
+          <rect class="d-box" x="210" y="566" width="480" height="44" rx="9"/>
+          <text class="d-sub" x="450" y="593" text-anchor="middle">if score &gt; threshold → Containment CR + XAI report</text>
+
+          <path class="d-flow" d="M450 618 L450 662" marker-end="url(#ah)"/>
+
+          <rect class="d-band" x="8" y="668" width="884" height="132" rx="12"/>
+          <text class="d-bandlabel" x="30" y="694">4 — Containment &amp; Response Layer · Go operator</text>
+          <rect class="d-box-accent" x="120" y="710" width="660" height="72" rx="9"/>
+          <text class="d-sub" x="450" y="735" text-anchor="middle">actions: deny-all NetworkPolicy · Eviction API · Istio blackhole</text>
+          <text class="d-sub" x="450" y="753" text-anchor="middle">safety: confidence &ge; 0.7 · dry-run default · approval tokens</text>
+
+          <path class="d-flow" d="M450 800 L450 844" marker-end="url(#ah)"/>
+
+          <rect class="d-band" x="8" y="850" width="884" height="120" rx="12"/>
+          <text class="d-bandlabel" x="30" y="876">5 — Observability &amp; Alerting Layer</text>
+          <rect class="d-box" x="120" y="892" width="320" height="62" rx="9"/>
+          <text class="d-sub" x="280" y="921" text-anchor="middle">Prometheus 5 s scrape · Grafana 8-panel</text>
+          <rect class="d-box" x="460" y="892" width="320" height="62" rx="9"/>
+          <text class="d-sub" x="620" y="921" text-anchor="middle">Elasticsearch logs · Jaeger tracing</text>
+
+          <path class="d-flow" d="M450 970 L450 1014" marker-end="url(#ah)"/>
+
+          <rect class="d-band" x="8" y="1020" width="884" height="120" rx="12"/>
+          <text class="d-bandlabel" x="30" y="1046">6 — UI &amp; SaaS Management Layer</text>
+          <rect class="d-box" x="120" y="1062" width="320" height="62" rx="9"/>
+          <text class="d-sub" x="280" y="1091" text-anchor="middle">Flask Web UI · port 5000</text>
+          <rect class="d-box" x="460" y="1062" width="320" height="62" rx="9"/>
+          <text class="d-sub" x="620" y="1091" text-anchor="middle">SaaS API · multi-tenant billing · JWT</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 1 — End-to-end telemetry path.</b> The accent boxes mark the core contribution: a TGNN that scores temporal graph windows, and a Kubernetes operator that enforces containment only behind a confidence gate and a human approval token.</figcaption>
+    </figure>
+
+    <h4>Architecture highlights</h4>
+    <ul>
+      <li><strong>Dual-mode operation</strong> — file-based JSONL PoC (no Kafka needed) or full Strimzi Kafka production ingestion.</li>
+      <li><strong>MITRE ATT&amp;CK mapping</strong> — attack playbooks tied to T1610, T1548, T1021, T1041, T1059.</li>
+      <li><strong>Multi-tenant SaaS</strong> — usage metering, billing, and namespace isolation across four subscription tiers.</li>
+    </ul>
+  </section>
+
+  <!-- 4 -->
+  <section id="sec4">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">Temporal Graph Construction Engine</h2></div>
+    <div class="prose">
+      <p>The <strong>Graph Builder</strong> service converts raw telemetry into temporal graph windows suitable for ML processing.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Feature</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Sessionization</strong></td><td>Groups events by <code>container_id</code>, <code>pod_name</code>, and 5-tuple network flows</td></tr>
+          <tr><td><strong>Sliding windows</strong></td><td>60-second windows with a 30-second step — overlapping, so an attack straddling a boundary still appears whole</td></tr>
+          <tr><td><strong>Graph structure</strong></td><td>NetworkX directed graphs with node and edge feature vectors</td></tr>
+          <tr><td><strong>Output format</strong></td><td>Apache Parquet via the <code>fastparquet</code> engine (no C-extension conflicts in containers)</td></tr>
+          <tr><td><strong>Dual mode</strong></td><td>File-based JSONL input (local) or Kafka consumer (production)</td></tr>
+          <tr><td><strong>Auto-flush</strong></td><td>Background flusher wakes every <code>step</code> seconds; generates synthetic fallback events when real traffic is quiet</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>Input event schema</h4>
+    <pre><code>{
+  "timestamp": 1704282000,
+  "event_type": "network_flow",
+  "src_pod": "frontend-abc123",
+  "dst_pod": "backend-xyz789",
+  "src_ip": "10.0.1.5",
+  "dst_ip": "10.0.2.15",
+  "dst_port": 8080,
+  "bytes_out": 1024,
+  "bytes_in": 2048
+}</code></pre>
+
+    <h4>Window outputs</h4>
+    <ul>
+      <li><code>window_&lt;ts&gt;.nodes.parquet</code> — pod_name, namespace, total_bytes, outgoing_unique_dst, flow_count</li>
+      <li><code>window_&lt;ts&gt;.edges.parquet</code> — src→dst pairs with cumulative bytes and flow count</li>
+    </ul>
+
+    <pre><code># File mode (local PoC)
+python -m graph_builder.main file --input-file events.jsonl \
+  --out-dir ./graphs --window-size 60 --step 30
+
+# Kafka mode (production)
+python -m graph_builder.main kafka --topic telemetry.logs \
+  --servers kafka:9092 --out-dir /data/graphs</code></pre>
+  </section>
+
+  <!-- 5 -->
+  <section id="sec5">
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">ML-Based Anomaly Detection — 4 Models + Ensemble</h2></div>
+    <div class="prose">
+      <p>The inference layer runs four anomaly detectors in parallel, each with a different strength, and combines them by ensemble vote.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Model</th><th>Architecture</th><th>Best for</th><th class="num">Threshold</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Autoencoder</strong></td><td>FC MLP 16→64→32→64→16, MSE loss</td><td>Node-level static feature anomalies</td><td class="num">0.5</td></tr>
+          <tr><td><strong>LSTM-AE</strong></td><td>LSTM encoder (H=64, T=50) → latent → LSTM decoder</td><td>Temporal flow-volume anomalies</td><td class="num">0.6</td></tr>
+          <tr><td><strong>DeepLog</strong></td><td>Embedding(64) → LSTM(H=128) → Linear(vocab)</td><td>Syscall &amp; log-sequence anomalies</td><td class="num">low next-token p</td></tr>
+          <tr class="row-strong"><td>TGNN</td><td>GraphSAGE / GATConv (4 heads) + temporal LSTM aggregation</td><td>Lateral movement &amp; multi-pod attacks</td><td class="num">0.5</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose">
+      <h3><span class="h3num">5.1</span> TGNN architecture deep dive</h3>
+    </div>
+    <pre class="tree">INPUT: Parquet window files
+├─ nodes: (pod_name, cpu, memory, network_in, network_out, syscall_count) → 6-D
+└─ edges: (flow_count, bytes_in, bytes_out, latency, duration)             → 5-D
+
+NODE ENCODER (MLP)
+└─ Linear(6, 64) → ReLU → Linear(64, 32)     → 32-D embedding per node
+
+EDGE ENCODER (with temporal encoding)
+├─ Sinusoidal positional time encoding (64-D)
+│    PE(t, 2k)   = sin(t / 10000^(2k/d))
+│    PE(t, 2k+1) = cos(t / 10000^(2k/d))
+├─ concat [edge_features(5-D), time_encoding(64-D)] = 69-D
+└─ MLP projection                            → 16-D edge embedding
+
+ATTENTION LAYERS (Graph Attention, 4 heads)
+├─ Head 1: port-based communication patterns
+├─ Head 2: volume-based anomalies (unusual byte counts)
+├─ Head 3: temporal sequence anomalies (timing deviations)
+├─ Head 4: unusual peer connections (lateral movement)
+├─ attention[i→j] = softmax(LeakyReLU(wᵀ[hᵢ ‖ hⱼ]))
+└─ output[i]      = σ(Σⱼ attention[i→j] · W · hⱼ)   → (num_nodes, 64)
+
+DUAL ANOMALY SCORING HEADS
+├─ Node head: Linear(64→32)→ReLU→Linear(32→8)→ReLU→Linear(8→1)→Sigmoid
+├─ Edge head: Linear(192→64)→ReLU→Linear(64→16)→ReLU→Linear(16→1)→Sigmoid
+└─ Composite: final = 0.6 · node_anomaly + 0.4 · edge_anomaly</pre>
+
+    <h4>Training strategy — contrastive triplet loss</h4>
+    <div class="equation">
+      <span class="var">&#8466;</span>(<span class="var">a</span>, <span class="var">p</span>, <span class="var">n</span>) = max&#8202;(&#8202;&#8214;<span class="var">f</span>(<span class="var">a</span>) &minus; <span class="var">f</span>(<span class="var">p</span>)&#8214;<sub>2</sub> &minus; &#8214;<span class="var">f</span>(<span class="var">a</span>) &minus; <span class="var">f</span>(<span class="var">n</span>)&#8214;<sub>2</sub> + <span class="var">&alpha;</span>,&#8202; 0&#8202;)
+      <span class="where">anchor / positive drawn from benign windows, negative from attack windows · margin &alpha;</span>
+    </div>
+    <h4>Feature standardisation (TGNN preprocessing)</h4>
+    <div class="equation">
+      <span class="var">x</span><sub>norm</sub> =
+      <span class="frac"><span><span class="var">x</span> &minus; <span class="var">&mu;</span></span><span><span class="var">&sigma;</span> + 10<sup>&minus;6</sup></span></span>
+      <span class="where">per-feature mean and standard deviation, with an epsilon guard against zero variance</span>
+    </div>
+    <div class="callout">
+      <span class="tag">Best practice</span>
+      <p>Run the baseline models (Autoencoder, LSTM-AE) for speed and the TGNN for accuracy. If PyTorch Geometric is unavailable, a lightweight <em>IsolationForest</em> baseline acts as a final safety net.</p>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section id="sec6">
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title">Explainable AI (XAI) Integration</h2></div>
+    <div class="prose"><p>Every alert carries an explanation so SOC analysts can understand <em>why</em> it fired.</p></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>XAI method</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><strong>SHAP DeepExplainer</strong></td><td>Feature-level attributions over Autoencoder inputs — which features drove the score</td></tr>
+          <tr><td><strong>Gradient graph attributions</strong></td><td>Evaluates &nabla;<sub>x</sub>&#8466; w.r.t. node features to isolate top influential features and suspicious neighbours</td></tr>
+          <tr><td><strong>Feature deviation analysis</strong></td><td>Lightweight production explainer — absolute percentage deviation from baseline mean &mu;<sub>f</sub>, no heavy SHAP dependency</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h4>Example explanation output</h4>
+    <pre><code>{
+  "score": 0.85,
+  "anomaly": true,
+  "model": "tgnn",
+  "explanation": "High outbound traffic to unusual port",
+  "top_features": ["bytes_out: +340% above baseline", "dst_port: 22 (unusual)"],
+  "suspicious_nodes": ["admin-pod-4", "db-pod-7"]
+}</code></pre>
+  </section>
+
+  <!-- 7 -->
+  <section id="sec7">
+    <div class="sec-head"><span class="sec-num">07</span><h2 class="sec-title">Red-Team Attack Playbooks — MITRE ATT&amp;CK Mapped</h2></div>
+    <div class="prose"><p>The project ships realistic adversary simulations used to generate attack windows for training and evaluation.</p></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Playbook</th><th>MITRE ID</th><th>What it simulates</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Container Escape</strong></td><td>T1610</td><td>Accesses <code>/var/run/docker.sock</code>, runs <code>docker run --privileged</code>, escalates <code>CAP_SYS_ADMIN</code></td></tr>
+          <tr><td><strong>Privilege Escalation</strong></td><td>T1548.001</td><td>Suspicious setuid binary, <code>prctl(PR_SET_DUMPABLE)</code>, spawns a root shell (UID 0)</td></tr>
+          <tr><td><strong>Lateral Movement</strong></td><td>T1021</td><td>Internal DNS enumeration of <code>*.default.svc.cluster.local</code>, TCP RPC to :8080, credential POST to <code>/api/admin/credentials</code></td></tr>
+          <tr><td><strong>Data Exfiltration</strong></td><td>T1041</td><td>500,000-byte outbound burst to an external IP, rapid concurrent connections to unknown public subnets</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section id="sec8">
+    <div class="sec-head"><span class="sec-num">08</span><h2 class="sec-title">Safe Automated Containment — Kubernetes Operator</h2></div>
+    <div class="prose">
+      <p>The <strong>Containment Operator</strong> (Go + controller-runtime) watches for <code>Containment</code> custom resources and enforces policy behind multiple safety layers.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Action</th><th>Mechanism</th><th>Risk</th><th>Rollback</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Isolate pod</strong></td><td>Deny-all NetworkPolicy (empty ingress/egress)</td><td><span class="badge a">medium</span></td><td>Delete the NetworkPolicy</td></tr>
+          <tr><td><strong>Evict pod</strong></td><td>Graceful termination via Eviction API (30 s grace)</td><td><span class="badge r">high</span></td><td>Pod auto-restarts via its Deployment</td></tr>
+          <tr><td><strong>Blackhole traffic</strong></td><td>Istio VirtualService, 100% fault delay (1000 s)</td><td><span class="badge g">low</span></td><td>Delete the VirtualService</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>Containment CRD — <code>security.example.com/v1alpha1</code></h4>
+    <pre><code>spec:
+  alertID: "alert-frontend-123"
+  confidence: 0.92
+  suggestedAction: "isolate_pod"   # isolate_pod | evict_pod | blackhole_traffic
+  explanation: "Unusual outbound traffic pattern"
+  dryRun: true
+  approvalToken: ""
+status:
+  state: "pending"     # pending → approved → applied → failed
+  appliedAction: ""
+  result: ""</code></pre>
+
+    <h4>Operator reconciliation loop</h4>
+    <pre class="tree">Reconcile(ctx, req)
+  ├── Fetch Containment CR
+  ├── If State == "applied" || "failed"        → return (no-op)
+  ├── If Confidence &lt; 0.7                       → UpdateStatus("pending", "confidence_too_low")
+  ├── If !DryRun &amp;&amp; ApprovalToken == ""         → requeue every 30s ("awaiting_approval")
+  └── Execute action
+        ├── "isolate_pod"       → create deny-all NetworkPolicy
+        ├── "evict_pod"         → delete pod, 30s GracePeriod
+        └── "blackhole_traffic" → Istio VirtualService fault delay
+        → UpdateStatus("applied", action)</pre>
+
+    <h4>Approval workflow</h4>
+    <pre><code>kubectl describe containment alert-frontend-123
+kubectl patch containment alert-frontend-123 \
+  -p '{"spec":{"approvalToken":"approved-by-analyst"}}'
+kubectl get containment alert-frontend-123 -o json | jq '.status'</code></pre>
+  </section>
+
+  <!-- 9 -->
+  <section id="sec9">
+    <div class="sec-head"><span class="sec-num">09</span><h2 class="sec-title">Real-Time Monitoring &amp; Visualization</h2></div>
+    <div class="prose"><p>A colour-coded Grafana dashboard with eight panels, refreshing every 5 seconds.</p></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Panel</th><th>PromQL</th><th>Green</th><th>Yellow</th><th>Red</th></tr></thead>
+        <tbody>
+          <tr><td>Events/sec (1m)</td><td><code>rate(zero_day_events_total[1m])</code></td><td>&lt; 100/s</td><td>100–500/s</td><td>&gt; 500/s</td></tr>
+          <tr><td>Active Alerts (5m)</td><td><code>increase(zero_day_attack_alerts_total[5m])</code></td><td>0</td><td>1–5</td><td>&gt; 5</td></tr>
+          <tr><td>Attack Score</td><td><code>zero_day_attack_score</code></td><td>0–39</td><td>40–69</td><td>70–100</td></tr>
+          <tr><td>Latency (p95)</td><td><code>histogram_quantile(0.95, …)</code></td><td>&lt; 50 ms</td><td>50–200 ms</td><td>&gt; 200 ms</td></tr>
+        </tbody>
+        <caption>Four of the eight dashboard panels; the remainder track event-volume, alert, and attack-score trends over time.</caption>
+      </table>
+    </div>
+    <h4>Key Prometheus metrics</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Metric</th><th>Type</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>zero_day_events_total</code></td><td>Counter</td><td>Total events received, labelled by source</td></tr>
+          <tr><td><code>zero_day_attack_alerts_total</code></td><td>Counter</td><td>Alerts triggered, labelled by severity</td></tr>
+          <tr><td><code>zero_day_attack_score</code></td><td>Gauge</td><td>Current score 0–100, decays 1/sec after 30 s of inactivity</td></tr>
+          <tr><td><code>graph_builder_processing_duration_seconds</code></td><td>Histogram</td><td>Window construction latency distribution</td></tr>
+          <tr><td><code>inference_duration_seconds</code></td><td>Histogram</td><td>Inference latency per model</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section id="sec10">
+    <div class="sec-head"><span class="sec-num">10</span><h2 class="sec-title">Multi-Tenant SaaS Management Layer</h2></div>
+    <div class="prose"><p>A production SaaS layer (<code>saas-management-api/</code>) provisions an isolated Kubernetes namespace per tenant, with <code>ResourceQuotas</code> and <code>LimitRanges</code> applied automatically.</p></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tier</th><th class="num">RPS</th><th class="num">Connections</th><th>Storage</th><th class="num">Price/mo</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Free</strong></td><td class="num">10</td><td class="num">5</td><td>10 GB</td><td class="num">$0</td></tr>
+          <tr><td><strong>Starter</strong></td><td class="num">100</td><td class="num">20</td><td>100 GB</td><td class="num">$99</td></tr>
+          <tr><td><strong>Professional</strong></td><td class="num">500</td><td class="num">100</td><td>500 GB + custom rules</td><td class="num">$499</td></tr>
+          <tr class="row-strong"><td>Enterprise</td><td class="num">2,000</td><td class="num">500</td><td>5 TB + SSO + dedicated SLA</td><td class="num">$2,000</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <pre><code>POST /api/v1/auth/register        onboard tenant, generate API key, create K8s namespace
+GET  /api/v1/tenants/&lt;id&gt;          retrieve tenant profile &amp; subscription state
+GET  /api/v1/tenants/&lt;id&gt;/usage    aggregate requests, inference calls, storage over N days
+POST /api/v1/tenants/&lt;id&gt;/upgrade  dynamic tier upgrade with audit logging
+GET  /api/v1/admin/tenants         multi-tenant administrative overview</code></pre>
+  </section>
+
+  <!-- 11 -->
+  <section id="sec11">
+    <div class="sec-head"><span class="sec-num">11</span><h2 class="sec-title">Experimental Results</h2></div>
+    <h4>End-to-end test suite — all 7 passed</h4>
+    <pre class="tree">[TEST 1] Docker Compose Services   ✅ all services running
+[TEST 2] Metrics Exporter Health   ✅ 15 zero_day metrics exposed
+[TEST 3] Prometheus Scraping       ✅ scraping metrics
+[TEST 4] Grafana Authentication    ✅ login successful
+[TEST 5] Dashboard Import          ✅ imported and accessible
+[TEST 6] Demo Execution            ✅ 7,746 events, metrics updated
+[TEST 7] Attack Demo               ✅ alerts incremented (400)</pre>
+
+    <div class="prose"><h4>ML validation &amp; performance</h4></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Metric</th><th class="num">Actual</th><th class="num">Target</th></tr></thead>
+        <tbody>
+          <tr class="row-strong"><td>ROC-AUC</td><td class="num">0.92</td><td class="num">&gt; 0.90</td></tr>
+          <tr><td>Mean time to detect (MTTD)</td><td class="num">&lt; 1 s</td><td class="num">&lt; 100 ms goal</td></tr>
+          <tr><td>Inference latency</td><td class="num">50 ms</td><td class="num">&lt; 100 ms</td></tr>
+          <tr><td>Containment success rate</td><td class="num">85%</td><td class="num">&gt; 80%</td></tr>
+          <tr><td>Dashboard load</td><td class="num">&lt; 200 ms</td><td class="num">&lt; 500 ms</td></tr>
+          <tr><td>Startup time</td><td class="num">&lt; 30 s</td><td class="num">&lt; 1 min</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>False positives are minimised by the &ge; 0.7 confidence gate before any containment CR is acted on. The IEEE proof-of-concept paper reports 120+ graph windows generated on Minikube with attack-to-dashboard latency verified under one second.</p>
+  </section>
+
+  <!-- 12 -->
+  <section id="sec12">
+    <div class="sec-head"><span class="sec-num">12</span><h2 class="sec-title">Key Design Decisions</h2></div>
+    <div class="grid two">
+      <div class="card"><div class="k">Why a Temporal GNN?</div><div class="v">Lateral movement lives in graph <em>topology</em> — pod1 suddenly reaching admin-pod4 on port 22 — not in any single metric. A TGNN models the relationships flat-feature models discard.</div></div>
+      <div class="card"><div class="k">Why four models?</div><div class="v">Autoencoder is fast but relationship-blind; LSTM-AE reads sequences; DeepLog reads logs; TGNN reads topology + time. Ensemble voting gives the best precision–recall trade-off.</div></div>
+      <div class="card"><div class="k">Why a Kubernetes operator?</div><div class="v">A CRD-based operator follows the reconciliation pattern — idempotent, retryable, and native to <code>kubectl</code> approval workflows. Far more reliable than scripts.</div></div>
+      <div class="card"><div class="k">Why dry-run by default?</div><div class="v">A false positive that auto-contains can outdamage the attack. <code>dryRun: true</code> plus an approval token ensures a human validates before enforcement.</div></div>
+      <div class="card"><div class="k">Why Parquet + fastparquet?</div><div class="v">Columnar, compressed, fast analytical reads. <code>fastparquet</code> avoids C-extension conflicts in containers; a PersistentVolume shares windows between writer and reader with no database.</div></div>
+      <div class="card"><div class="k">Why dual-mode (file + Kafka)?</div><div class="v">File mode demos the whole system with no Kafka, Zookeeper, or Strimzi. Kafka mode handles production throughput with 3-broker resilience.</div></div>
+    </div>
+  </section>
+
+  <!-- 13 -->
+  <section id="sec13">
+    <div class="sec-head"><span class="sec-num">13</span><h2 class="sec-title">Challenges Faced &amp; Solutions</h2></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="num">#</th><th>Challenge</th><th>Solution</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td><strong>TGNN training complexity</strong> — converting Parquet windows into PyG <code>Data</code> objects with correct <code>edge_index</code>, <code>edge_attr</code>, and 64-D sinusoidal encodings</td><td>Careful tensor construction, a graceful fallback when PyG is missing, and an IsolationForest safety net</td></tr>
+          <tr><td class="num">2</td><td><strong>Safe containment design</strong> — automated responses that must not take down production</td><td>Confidence threshold &ge; 0.7, dry-run default, approval workflow, and a graduated NetworkPolicy → Eviction → Blackhole hierarchy</td></tr>
+          <tr><td class="num">3</td><td><strong>Multi-source telemetry normalization</strong> — audit logs, Cilium flows, and eBPF syscalls all differ in schema</td><td>Unified event format with schema mapping, ISO-8601/epoch parsing, and window-boundary handling</td></tr>
+          <tr><td class="num">4</td><td><strong>Sliding-window graph construction</strong> across window boundaries with Kafka lag</td><td>Background flusher with synthetic fallback events and explicit buffer cleanup after processing</td></tr>
+          <tr><td class="num">5</td><td><strong>Operator reconciliation edge cases</strong> — unregistered CRDs, already-evicted pods, out-of-order approval tokens</td><td>Idempotent reconcile with 30-second requeue on retryable failures</td></tr>
+          <tr><td class="num">6</td><td><strong>XAI in resource-constrained containers</strong> — SHAP is heavy</td><td>Lightweight <code>xai_explain.py</code> computes feature deviations from baseline means, always available</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 14 -->
+  <section id="sec14">
+    <div class="sec-head"><span class="sec-num">14</span><h2 class="sec-title">Tech Stack &amp; Deployment</h2></div>
+    <div class="grid three">
+      <div class="card"><div class="k">ML &amp; backend</div><div class="v">Python 3.11+, PyTorch 2.0+, PyTorch Geometric, scikit-learn, SHAP, NetworkX, pandas, PyArrow / fastparquet, Flask, prometheus_client, kafka-python, SQLite</div></div>
+      <div class="card"><div class="k">Containment</div><div class="v">Go 1.21+, controller-runtime v0.16 (Kubebuilder), client-go v0.28, Zap structured logging</div></div>
+      <div class="card"><div class="k">Infrastructure</div><div class="v">Kubernetes / Minikube / GKE / EKS / AKS, Istio (mTLS), Cilium / Hubble, Apache Kafka (Strimzi, 3 brokers), Docker Compose, Helm 3, Velero backups</div></div>
+      <div class="card"><div class="k">Observability</div><div class="v">Prometheus (5 s scrape, 15-day retention), Grafana (8-panel), OpenTelemetry Collector, Fluent Bit, Jaeger, Elasticsearch / ClickHouse</div></div>
+      <div class="card"><div class="k">Namespaces</div><div class="v"><code>ml</code>, <code>quarantine</code>, <code>monitoring</code>, <code>kafka</code>, <code>prod</code>, <code>dev</code> — default-deny-all NetworkPolicy on <code>prod</code>, Pod Security Standards enforced</div></div>
+      <div class="card"><div class="k">Quick start</div><div class="v">Docker Compose: <code>bash scripts/start_local_stack.sh</code> → Grafana :3000, Prometheus :9090, Metrics :8000</div></div>
+    </div>
+    <h4>Helm production install</h4>
+    <pre><code>helm install zero-day ./helm/zero-day-saas \
+  --set highAvailability.replicas.inferenceService=3 \
+  --set autoscaling.hpa.maxReplicas=15 \
+  --set security.mtls.enabled=true \
+  --set backup.velero.enabled=true</code></pre>
+  </section>
+
+  <p class="foot">Zero-Day · Kubernetes Attack Detection &amp; Mitigation Framework · Technical Report · 2026</p>
+</main>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('themeToggle');
+    function current(){
+      return root.getAttribute('data-theme') ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    }
+    btn.addEventListener('click', function(){
+      var next = current() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('zd-theme', next); } catch (e) {}
+    });
+    try {
+      var saved = localStorage.getItem('zd-theme');
+      if (saved) root.setAttribute('data-theme', saved);
+    } catch (e) {}
+  })();
+</script>

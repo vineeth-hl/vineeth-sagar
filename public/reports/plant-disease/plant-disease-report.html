@@ -1,0 +1,965 @@
+<title>Plant Disease Detection &amp; Hybrid Treatment System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    --paper:#f4f6f1;
+    --surface:#ffffff;
+    --surface-2:#eef1ea;
+    --ink:#18211c;
+    --muted:#556358;
+    --faint:#8a978d;
+    --line:#d7ddd0;
+    --accent:#1f6f43;
+    --accent-soft:#e4efe7;
+    --warn:#9a5f0d;
+    --crit:#a63b2b;
+    --shadow:0 1px 2px rgba(24,33,28,.04), 0 8px 24px -12px rgba(24,33,28,.12);
+
+    --f-display:"Fraunces", Georgia, "Times New Roman", serif;
+    --f-body:"IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+
+    --measure:66ch;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0f1512;
+      --surface:#161d19;
+      --surface-2:#1b2420;
+      --ink:#e6ece7;
+      --muted:#9fada3;
+      --faint:#6f7d73;
+      --line:#2b352f;
+      --accent:#5bbd83;
+      --accent-soft:#17251d;
+      --warn:#d69a4e;
+      --crit:#e77762;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0f1512;
+    --surface:#161d19;
+    --surface-2:#1b2420;
+    --ink:#e6ece7;
+    --muted:#9fada3;
+    --faint:#6f7d73;
+    --line:#2b352f;
+    --accent:#5bbd83;
+    --accent-soft:#17251d;
+    --warn:#d69a4e;
+    --crit:#e77762;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.5);
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--f-body);
+    font-size:16px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+
+  /* ---------- header ---------- */
+  header.top{
+    position:sticky;top:0;z-index:50;
+    display:flex;align-items:center;justify-content:space-between;gap:1rem;
+    padding:.7rem clamp(1rem,4vw,2.4rem);
+    background:color-mix(in srgb, var(--paper) 86%, transparent);
+    backdrop-filter:saturate(140%) blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex;align-items:center;gap:.6rem;font-family:var(--f-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  .top nav{display:flex;gap:.4rem;align-items:center}
+  .top nav a{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;color:var(--muted);text-decoration:none;padding:.3rem .55rem;border-radius:6px}
+  .top nav a:hover{color:var(--ink);background:var(--surface-2)}
+  .toggle{
+    font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;
+    background:var(--surface);color:var(--muted);border:1px solid var(--line);
+    padding:.35rem .6rem;border-radius:7px;cursor:pointer;
+  }
+  .toggle:hover{color:var(--ink);border-color:var(--accent)}
+
+  /* ---------- layout ---------- */
+  main{max-width:960px;margin:0 auto;padding:0 clamp(1rem,4vw,2.4rem) 6rem}
+  .prose{max-width:var(--measure)}
+  p{margin:0 0 1rem}
+  a{color:var(--accent);text-underline-offset:2px}
+
+  /* ---------- hero ---------- */
+  .hero{
+    padding:clamp(2.6rem,7vw,5rem) 0 clamp(1.8rem,4vw,3rem);
+    border-bottom:1px solid var(--line);
+    animation:rise .7s cubic-bezier(.2,.7,.2,1) both;
+  }
+  @media (prefers-reduced-motion: reduce){ .hero{animation:none} }
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .eyebrow{
+    font-family:var(--f-mono);font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--accent);margin-bottom:1.2rem;display:flex;align-items:center;gap:.7rem;
+  }
+  .eyebrow::before{content:"";width:34px;height:1px;background:var(--accent)}
+  h1{
+    font-family:var(--f-display);font-weight:600;
+    font-size:clamp(2rem,6vw,3.4rem);line-height:1.04;letter-spacing:-.01em;
+    margin:0 0 1rem;text-wrap:balance;
+  }
+  .lede{font-size:clamp(1.05rem,2.4vw,1.28rem);color:var(--muted);max-width:54ch;margin-bottom:2rem}
+  .stats{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  }
+  .stat{background:var(--surface);padding:1.1rem 1.15rem}
+  .stat .n{font-family:var(--f-display);font-weight:600;font-size:1.6rem;line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .stat .l{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-top:.5rem}
+  .meta-line{margin-top:1.5rem;font-family:var(--f-mono);font-size:.74rem;color:var(--faint);letter-spacing:.04em}
+  @media (max-width:680px){ .stats{grid-template-columns:repeat(2,1fr)} }
+
+  /* ---------- toc ---------- */
+  .toc{
+    margin:2.5rem 0 0;padding:1.4rem 1.5rem;
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  }
+  .toc h2{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:0 0 1rem}
+  .toc ol{margin:0;padding:0;list-style:none;columns:2;column-gap:2.5rem}
+  .toc li{margin:0 0 .5rem;break-inside:avoid}
+  .toc a{display:flex;gap:.7rem;text-decoration:none;color:var(--ink);font-size:.92rem}
+  .toc a:hover{color:var(--accent)}
+  .toc a .num{font-family:var(--f-mono);font-size:.78rem;color:var(--faint);min-width:1.4rem}
+  @media (max-width:640px){ .toc ol{columns:1} }
+
+  /* ---------- sections ---------- */
+  section{padding:clamp(2.4rem,5vw,3.6rem) 0;border-bottom:1px solid var(--line)}
+  .sec-head{margin-bottom:1.6rem}
+  .sec-num{font-family:var(--f-mono);font-size:.76rem;letter-spacing:.14em;color:var(--accent);display:block;margin-bottom:.5rem}
+  h2.sec-title{
+    font-family:var(--f-display);font-weight:600;
+    font-size:clamp(1.5rem,3.6vw,2.1rem);line-height:1.1;letter-spacing:-.01em;
+    margin:0;text-wrap:balance;
+  }
+  h3{
+    font-family:var(--f-body);font-weight:600;font-size:1.06rem;
+    margin:2.2rem 0 .7rem;color:var(--ink);
+    display:flex;align-items:baseline;gap:.6rem;
+  }
+  h3 .h3num{font-family:var(--f-mono);font-size:.8rem;color:var(--accent);font-weight:500}
+  h4{font-family:var(--f-mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:1.6rem 0 .6rem}
+
+  ul,ol.body-list{margin:0 0 1rem;padding-left:1.2rem}
+  li{margin:.35rem 0}
+  strong{font-weight:600;color:var(--ink)}
+  .prose ul li::marker{color:var(--accent)}
+
+  /* ---------- callout ---------- */
+  .callout{
+    border-left:2px solid var(--accent);
+    background:var(--accent-soft);
+    padding:1rem 1.2rem;border-radius:0 10px 10px 0;margin:1.4rem 0;
+    max-width:var(--measure);
+  }
+  .callout p:last-child{margin:0}
+  .callout .tag{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:.35rem}
+
+  /* ---------- figure / svg ---------- */
+  figure{margin:2rem 0;padding:0}
+  .fig-frame{
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:clamp(1rem,3vw,1.8rem);box-shadow:var(--shadow);overflow-x:auto;
+  }
+  figure svg{display:block;width:100%;height:auto;min-width:540px;color:var(--ink)}
+  figcaption{
+    margin-top:.9rem;font-size:.86rem;color:var(--muted);
+    font-family:var(--f-body);max-width:var(--measure);
+  }
+  figcaption b{color:var(--ink);font-weight:600}
+
+  /* svg element classes */
+  .d-band{fill:var(--surface-2);stroke:var(--line);stroke-width:1}
+  .d-bandlabel{fill:var(--faint);font-family:var(--f-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+  .d-box{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+  .d-box-accent{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.75}
+  .d-title{fill:var(--ink);font-family:var(--f-body);font-size:13px;font-weight:600}
+  .d-sub{fill:var(--muted);font-family:var(--f-mono);font-size:11px}
+  .d-flow{fill:none;stroke:var(--muted);stroke-width:1.5}
+  .d-flow-accent{fill:none;stroke:var(--accent);stroke-width:2}
+  .d-lbl{fill:var(--muted);font-family:var(--f-mono);font-size:11px}
+  .d-lbl-em{fill:var(--accent);font-family:var(--f-mono);font-size:11px;font-weight:500}
+  .d-arrowhead{fill:var(--muted)}
+  .d-arrowhead-accent{fill:var(--accent)}
+  .d-diamond{fill:var(--surface);stroke:var(--accent);stroke-width:1.75}
+
+  /* ---------- tables ---------- */
+  .table-wrap{overflow-x:auto;margin:1.4rem 0;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:520px}
+  caption{caption-side:bottom;text-align:left;padding:.7rem .9rem;color:var(--faint);font-size:.8rem;font-family:var(--f-mono)}
+  th,td{padding:.65rem .9rem;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{
+    font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--muted);font-weight:500;background:var(--surface-2);
+  }
+  tbody tr:last-child td{border-bottom:none}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--f-mono);font-size:.86rem}
+  tbody tr:hover td{background:var(--surface-2)}
+  .row-strong td{font-weight:600;color:var(--ink)}
+  .row-strong td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
+
+  /* ---------- code ---------- */
+  pre{
+    margin:1.3rem 0;padding:1.1rem 1.2rem;border-radius:12px;
+    background:var(--surface-2);border:1px solid var(--line);border-left:2px solid var(--accent);
+    overflow-x:auto;font-family:var(--f-mono);font-size:.82rem;line-height:1.6;color:var(--ink);
+  }
+  pre.tree{white-space:pre;color:var(--muted)}
+  code{font-family:var(--f-mono);font-size:.86em;background:var(--surface-2);padding:.1em .38em;border-radius:5px;border:1px solid var(--line)}
+  pre code{background:none;border:none;padding:0;font-size:1em}
+
+  /* ---------- equation ---------- */
+  .equation{
+    margin:1.3rem 0;padding:1.2rem 1.3rem;border-radius:12px;
+    background:var(--surface);border:1px solid var(--line);
+    font-family:var(--f-display);font-size:1.08rem;text-align:center;overflow-x:auto;
+    color:var(--ink);
+  }
+  .equation .var{font-style:italic}
+  .equation .where{display:block;margin-top:.6rem;font-family:var(--f-mono);font-size:.76rem;color:var(--muted);font-style:normal}
+  .frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;margin:0 .25em}
+  .frac>span:first-child{border-bottom:1.5px solid currentColor;padding:0 .35em}
+  .frac>span:last-child{padding:.05em .35em 0}
+  .bigop{font-size:1.7em;vertical-align:-.32em;line-height:1;font-family:Georgia,serif}
+
+  /* ---------- cards grid ---------- */
+  .grid{display:grid;gap:1rem;margin:1.4rem 0}
+  .grid.two{grid-template-columns:repeat(2,1fr)}
+  .grid.three{grid-template-columns:repeat(3,1fr)}
+  .grid.four{grid-template-columns:repeat(4,1fr)}
+  @media (max-width:760px){ .grid.three,.grid.four{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:520px){ .grid.two,.grid.three,.grid.four{grid-template-columns:1fr} }
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.15rem;
+  }
+  .card .k{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:.4rem}
+  .card .v{font-size:.92rem;color:var(--ink)}
+  .card .v strong{display:block;font-family:var(--f-display);font-size:1.15rem;font-weight:600;margin-bottom:.15rem}
+
+  /* phase cards */
+  .phase{position:relative;padding-left:1.4rem}
+  .phase::before{content:"";position:absolute;left:0;top:.3rem;bottom:.3rem;width:3px;border-radius:2px;background:var(--accent)}
+
+  /* crop taxonomy */
+  .crops{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem;margin:1.3rem 0}
+  .crop{
+    display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;
+    background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:.6rem .8rem;
+  }
+  .crop .cn{font-size:.88rem}
+  .crop .cc{font-family:var(--f-mono);font-size:.74rem;color:var(--accent);font-variant-numeric:tabular-nums}
+
+  /* badges */
+  .badge{display:inline-block;font-family:var(--f-mono);font-size:.68rem;letter-spacing:.05em;padding:.15em .55em;border-radius:5px;border:1px solid currentColor;vertical-align:middle}
+  .badge.g{color:var(--accent)}
+  .badge.a{color:var(--warn)}
+  .badge.r{color:var(--crit)}
+
+  .foot{padding:2.5rem 0 0;color:var(--faint);font-family:var(--f-mono);font-size:.76rem;text-align:center;border-bottom:none}
+
+  :where(a,button):focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+</style>
+
+<header class="top">
+  <div class="brand"><span class="dot"></span> Technical Report</div>
+  <nav>
+    <a href="#sec3">Architecture</a>
+    <a href="#sec4">ML Pipeline</a>
+    <a href="#sec8">Results</a>
+    <button class="toggle" id="themeToggle" type="button" aria-label="Toggle colour theme">Theme</button>
+  </nav>
+</header>
+
+<main>
+
+  <div class="hero">
+    <div class="eyebrow">Academic Major Project &nbsp;·&nbsp; 2026</div>
+    <h1>Plant Disease Detection &amp; Hybrid Treatment System</h1>
+    <p class="lede">A full-stack AI platform that identifies crop pathologies in real time and returns an actionable agricultural prescription — built on a dual-ResNet50 ensemble, test-time augmentation, and an adaptive hybrid treatment engine.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="n">96.93%</div><div class="l">Test accuracy</div></div>
+      <div class="stat"><div class="n">38 / 14</div><div class="l">Classes / crops</div></div>
+      <div class="stat"><div class="n">&lt;200 ms</div><div class="l">GPU inference</div></div>
+      <div class="stat"><div class="n">10&times;</div><div class="l">Ensemble + TTA passes</div></div>
+    </div>
+    <div class="meta-line">v2.0 &nbsp;·&nbsp; August 2026 &nbsp;·&nbsp; Next.js 16 / React 19 &nbsp;·&nbsp; Flask 3.1 + PyTorch &nbsp;·&nbsp; OpenAI GPT-3.5-Turbo</div>
+
+    <div class="toc">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#sec1"><span class="num">01</span><span>Executive Summary</span></a></li>
+        <li><a href="#sec2"><span class="num">02</span><span>Problem Statement &amp; Context</span></a></li>
+        <li><a href="#sec3"><span class="num">03</span><span>End-to-End System Architecture</span></a></li>
+        <li><a href="#sec4"><span class="num">04</span><span>Deep Learning &amp; ML Pipeline</span></a></li>
+        <li><a href="#sec5"><span class="num">05</span><span>Dataset Engineering &amp; Taxonomy</span></a></li>
+        <li><a href="#sec6"><span class="num">06</span><span>Backend API &amp; Inference Server</span></a></li>
+        <li><a href="#sec7"><span class="num">07</span><span>Frontend Architecture</span></a></li>
+        <li><a href="#sec8"><span class="num">08</span><span>Experimental Results</span></a></li>
+        <li><a href="#sec9"><span class="num">09</span><span>Design Decisions</span></a></li>
+        <li><a href="#sec10"><span class="num">10</span><span>Challenges &amp; Solutions</span></a></li>
+        <li><a href="#sec11"><span class="num">11</span><span>Installation &amp; Deployment</span></a></li>
+        <li><a href="#sec12"><span class="num">12</span><span>Future Roadmap</span></a></li>
+        <li><a href="#sec13"><span class="num">13</span><span>Codebase Reference</span></a></li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <section id="sec1">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Executive Summary</h2></div>
+    <div class="prose">
+      <p>The <strong>Plant Disease Detection &amp; Hybrid Treatment System</strong> is an enterprise-grade, full-stack AI platform designed to identify crop pathologies in real time and deliver actionable agricultural prescriptions. By combining a <strong>dual-ResNet50 ensemble</strong>, <strong>synthetic channel-level augmentation</strong>, <strong>10-pass test-time augmentation (TTA)</strong>, and an <strong>adaptive hybrid treatment recommendation engine</strong>, the system bridges the gap between laboratory deep-learning models and variable real-world farm conditions.</p>
+    </div>
+    <div class="grid four">
+      <div class="card"><div class="k">Accuracy</div><div class="v"><strong>96.93%</strong>across 38 disease classes covering 14 economic crop species</div></div>
+      <div class="card"><div class="k">Robustness</div><div class="v"><strong>10 predictions</strong>per inference pass, removing sensor and lighting bias</div></div>
+      <div class="card"><div class="k">Latency</div><div class="v"><strong>&lt;200 ms</strong>GPU inference via PyTorch mixed precision <code>torch.amp.autocast</code></div></div>
+      <div class="card"><div class="k">Advisory</div><div class="v"><strong>Dual-tier</strong>OpenAI GPT advice with automatic failover to 30+ offline protocols</div></div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section id="sec2">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Problem Statement &amp; Agricultural Context</h2></div>
+    <div class="prose">
+      <h3><span class="h3num">2.1</span> The challenge</h3>
+      <p>Global agricultural production loses between <strong>20% and 40% of crop yields</strong> annually to pests and diseases. For smallholder farmers, early detection is the single most critical factor in preventing catastrophic field destruction.</p>
+
+      <h3><span class="h3num">2.2</span> Limitations of current methods</h3>
+      <ul>
+        <li><strong>Manual inspection</strong> requires certified agronomists — scarce, costly, and unavailable in remote agricultural zones.</li>
+        <li><strong>Standard vision models</strong> trained on static datasets such as raw PlantVillage suffer severe <strong>distribution shift</strong> in the field: direct-sunlight glare and leaf shadowing, lens distortion and colour-balance shifts across phone sensors, and heavy background clutter.</li>
+        <li><strong>No actionable next steps</strong> — most tools output a raw disease label with no dosage instructions, organic remedies, chemical treatments, or preventive guidance.</li>
+      </ul>
+    </div>
+    <div class="callout">
+      <span class="tag">Design goal</span>
+      <p>Deliver a diagnosis that is <em>resilient to field conditions</em> and pair it with a treatment plan a farmer can act on the same day — online or offline.</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section id="sec3">
+    <div class="sec-head"><span class="sec-num">03</span><h2 class="sec-title">End-to-End System Architecture</h2></div>
+    <div class="prose">
+      <p>The application is structured into three decoupled layers: <strong>Presentation</strong> (Next.js 16 / React 19), <strong>Proxy / Routing</strong> (Next.js rewrites), and <strong>Inference / Reasoning</strong> (Flask 3.1 + PyTorch + OpenAI). A single leaf image travels the full path below in one request.</p>
+    </div>
+
+    <figure>
+      <div class="fig-frame">
+        <svg viewBox="0 0 900 1210" role="img" aria-label="End-to-end workflow: the browser captures a leaf image and POSTs it to a Next.js proxy, which rewrites the request to a Flask server; the server preprocesses the image into five TTA variants, runs them through two ResNet-50 models, fuses ten softmax vectors into one prediction, generates a treatment plan via OpenAI with an offline-database fallback, and returns JSON that renders as diagnostic cards.">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" class="d-arrowhead"/>
+            </marker>
+            <marker id="aha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" class="d-arrowhead-accent"/>
+            </marker>
+          </defs>
+
+          <!-- BAND 1 : PRESENTATION -->
+          <rect class="d-band" x="8" y="16" width="884" height="176" rx="12"/>
+          <text class="d-bandlabel" x="30" y="42">1 — Presentation Layer · Next.js 16 / React 19</text>
+          <rect class="d-box" x="120" y="60" width="290" height="94" rx="9"/>
+          <text class="d-title" x="265" y="92" text-anchor="middle">WebRTC Camera</text>
+          <text class="d-sub" x="265" y="112" text-anchor="middle">getUserMedia · environment cam</text>
+          <text class="d-sub" x="265" y="128" text-anchor="middle">canvas frame grab → JPEG blob</text>
+          <rect class="d-box" x="490" y="60" width="290" height="94" rx="9"/>
+          <text class="d-title" x="635" y="92" text-anchor="middle">File Drag &amp; Drop</text>
+          <text class="d-sub" x="635" y="112" text-anchor="middle">local blob preview</text>
+          <text class="d-sub" x="635" y="128" text-anchor="middle">no base64 encoding</text>
+          <path class="d-flow" d="M265 154 L265 174 L635 174 L635 154 M450 174 L450 192"/>
+
+          <!-- arrow 1 -->
+          <path class="d-flow" d="M450 192 L450 250" marker-end="url(#ah)"/>
+          <text class="d-lbl" x="462" y="225">HTTP POST /predict — multipart FormData(image)</text>
+
+          <!-- BAND 2 : PROXY -->
+          <rect class="d-band" x="8" y="256" width="884" height="118" rx="12"/>
+          <text class="d-bandlabel" x="30" y="282">2 — Proxy / API Gateway · Next.js internal rewrite</text>
+          <rect class="d-box" x="120" y="298" width="660" height="60" rx="9"/>
+          <text class="d-sub" x="450" y="323" text-anchor="middle">rewrites  /predict  and  /health  →  http://localhost:5000</text>
+          <text class="d-sub" x="450" y="341" text-anchor="middle">eliminates CORS · shields backend port · clean relative fetch()</text>
+
+          <!-- arrow 2 -->
+          <path class="d-flow" d="M450 374 L450 432" marker-end="url(#ah)"/>
+          <text class="d-lbl" x="462" y="407">proxied request</text>
+
+          <!-- BAND 3 : INFERENCE -->
+          <rect class="d-band" x="8" y="438" width="884" height="540" rx="12"/>
+          <text class="d-bandlabel" x="30" y="464">3 — Inference &amp; Reasoning Layer · Flask 3.1 + PyTorch + OpenAI</text>
+
+          <rect class="d-box" x="150" y="480" width="600" height="58" rx="9"/>
+          <text class="d-title" x="450" y="504" text-anchor="middle">Preprocessing pipeline</text>
+          <text class="d-sub" x="450" y="524" text-anchor="middle">PIL convert('RGB') · Resize(256) · CenterCrop(224) · Normalize → tensor</text>
+
+          <path class="d-flow" d="M450 538 L450 574" marker-end="url(#ah)"/>
+          <text class="d-lbl-em" x="462" y="560">build 5 TTA variants  T1 … T5</text>
+
+          <rect class="d-box-accent" x="150" y="576" width="290" height="104" rx="9"/>
+          <text class="d-title" x="295" y="606" text-anchor="middle">Model 1 · Baseline</text>
+          <text class="d-sub" x="295" y="626" text-anchor="middle">ResNet-50 · 70,295 RGB imgs</text>
+          <text class="d-sub" x="295" y="643" text-anchor="middle">Val acc 99.91%</text>
+          <text class="d-sub" x="295" y="662" text-anchor="middle">5 TTA inferences · FP16</text>
+
+          <rect class="d-box-accent" x="460" y="576" width="290" height="104" rx="9"/>
+          <text class="d-title" x="605" y="606" text-anchor="middle">Model 2 · Channel-Aug</text>
+          <text class="d-sub" x="605" y="626" text-anchor="middle">ResNet-50 · 8,664 synth imgs</text>
+          <text class="d-sub" x="605" y="643" text-anchor="middle">Val acc 95.81%</text>
+          <text class="d-sub" x="605" y="662" text-anchor="middle">5 TTA inferences · FP16</text>
+
+          <path class="d-flow-accent" d="M295 680 L295 702 L605 702 L605 680 M450 702 L450 724" marker-end="url(#aha)"/>
+          <text class="d-lbl-em" x="462" y="720">10 softmax probability vectors</text>
+
+          <rect class="d-box" x="210" y="726" width="480" height="72" rx="9"/>
+          <text class="d-title" x="450" y="752" text-anchor="middle">Softmax fusion — mean of 10 vectors, P ∈ ℝ³⁸</text>
+          <text class="d-sub" x="450" y="774" text-anchor="middle">C* = argmax P · S* = P[C*] · calibrated confidence 0–1</text>
+
+          <path class="d-flow" d="M450 798 L450 834" marker-end="url(#ah)"/>
+          <text class="d-lbl" x="462" y="820">primary label + confidence</text>
+
+          <rect class="d-box" x="150" y="836" width="600" height="122" rx="9"/>
+          <text class="d-title" x="450" y="864" text-anchor="middle">Hybrid Treatment Recommendation Engine</text>
+          <text class="d-sub" x="450" y="888" text-anchor="middle">dynamic path — OpenAI GPT-3.5-Turbo, structured JSON system prompt</text>
+          <text class="d-sub" x="450" y="906" text-anchor="middle">fallback path — offline curated database, 30+ pathologies</text>
+          <text class="d-sub" x="450" y="930" text-anchor="middle">output — organic · chemical · prevention · timing · severity</text>
+
+          <!-- arrow 3 -->
+          <path class="d-flow" d="M450 978 L450 1036" marker-end="url(#ah)"/>
+          <text class="d-lbl" x="462" y="1011">JSON response — prediction + confidence + treatment</text>
+
+          <!-- BAND 4 : UI -->
+          <rect class="d-band" x="8" y="1042" width="884" height="160" rx="12"/>
+          <text class="d-bandlabel" x="30" y="1068">4 — Diagnostic Display · result cards</text>
+          <rect class="d-box" x="40" y="1082" width="196" height="102" rx="9"/>
+          <text class="d-title" x="138" y="1112" text-anchor="middle">Diagnosis</text>
+          <text class="d-sub" x="138" y="1132" text-anchor="middle">confidence badge</text>
+          <text class="d-sub" x="138" y="1148" text-anchor="middle">green / amber / red</text>
+          <rect class="d-box" x="256" y="1082" width="196" height="102" rx="9"/>
+          <text class="d-title" x="354" y="1112" text-anchor="middle">Organic</text>
+          <text class="d-sub" x="354" y="1132" text-anchor="middle">bio-fungicide</text>
+          <text class="d-sub" x="354" y="1148" text-anchor="middle">copper · pruning</text>
+          <rect class="d-box" x="472" y="1082" width="196" height="102" rx="9"/>
+          <text class="d-title" x="570" y="1112" text-anchor="middle">Chemical</text>
+          <text class="d-sub" x="570" y="1132" text-anchor="middle">Mancozeb ·</text>
+          <text class="d-sub" x="570" y="1148" text-anchor="middle">Metalaxyl</text>
+          <rect class="d-box" x="688" y="1082" width="196" height="102" rx="9"/>
+          <text class="d-title" x="786" y="1112" text-anchor="middle">Prevention</text>
+          <text class="d-sub" x="786" y="1132" text-anchor="middle">rotation · spacing</text>
+          <text class="d-sub" x="786" y="1148" text-anchor="middle">timing · severity</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 1 — End-to-end request workflow.</b> The green path marks the system's core contribution: two complementary ResNet-50 models each run five test-time-augmented inferences, and their ten softmax vectors are averaged into a single field-resilient prediction before the treatment engine is consulted.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 4 -->
+  <section id="sec4">
+    <div class="sec-head"><span class="sec-num">04</span><h2 class="sec-title">Deep Learning &amp; Machine Learning Pipeline</h2></div>
+
+    <div class="prose">
+      <h3><span class="h3num">4.1</span> Model architecture — ResNet-50</h3>
+      <p>The system uses <strong>ResNet-50</strong> pre-trained on ImageNet-1K (V2 weights) as the core feature extractor. Identity shortcut connections, <span class="var">y</span> = &#8497;(<span class="var">x</span>, {<span class="var">W&#7522;</span>}) + <span class="var">x</span>, mitigate the vanishing-gradient problem across 50 deep convolutional layers. The default 1,000-class head is replaced with a custom linear projection &#8477;<sup>2048</sup> &#8594; &#8477;<sup>38</sup>.</p>
+    </div>
+
+    <pre class="tree">Input (3, 224, 224)
+  │
+Conv1 (7×7, 64, stride 2) → BatchNorm → ReLU → MaxPool (3×3, stride 2)
+  │
+Layer 1 : 3 bottleneck residual blocks   [64,  64,  256]
+Layer 2 : 4 bottleneck residual blocks   [128, 128, 512]
+Layer 3 : 6 bottleneck residual blocks   [256, 256, 1024]
+Layer 4 : 3 bottleneck residual blocks   [512, 512, 2048]
+  │
+Adaptive average pooling (1×1) → flatten (2048-dim vector)
+  │
+Custom linear classifier (2048 → 38 classes)</pre>
+
+    <div class="prose">
+      <h3><span class="h3num">4.2</span> Two-phase transfer-learning strategy</h3>
+      <p>Training is orchestrated in two phases (<code>train.py</code>) to preserve pre-trained feature representations while adapting to leaf-lesion patterns.</p>
+    </div>
+    <div class="grid two">
+      <div class="card phase">
+        <div class="k">Phase 1 — classifier-head warm-up · 3 epochs</div>
+        <div class="v">
+          <ul>
+            <li>Backbone weights frozen (<code>requires_grad = False</code>)</li>
+            <li>BatchNorm layers locked in eval mode</li>
+            <li>Train only <code>fc.weight</code> / <code>fc.bias</code> — AdamW, LR 1e-3, weight decay 1e-2</li>
+            <li>Goal: stabilise the randomly initialised classifier without disturbing the extractor</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card phase">
+        <div class="k">Phase 2 — full backbone fine-tuning · 20 epochs</div>
+        <div class="v">
+          <ul>
+            <li>All layers unfrozen (<code>requires_grad = True</code>)</li>
+            <li>BatchNorm active in training mode</li>
+            <li>AdamW with low backbone LR 1e-4</li>
+            <li>CosineAnnealingLR (T_max = 20) · CrossEntropy with label smoothing 0.1</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3><span class="h3num">4.3</span> Optimisation, loss &amp; regularisation</h3>
+    </div>
+    <h4>Label-smoothing cross-entropy</h4>
+    <div class="equation">
+      <span class="var">&#8466;</span><sub>LS</sub>(<span class="var">y</span>, <span class="var">&#375;</span>) = &minus; <span class="bigop">&#8721;</span><sub><span class="var">i</span>=1</sub><sup><span class="var">K</span></sup>
+      &#8202;( (1 &minus; <span class="var">&epsilon;</span>)&#8202;<span class="var">y&#7522;</span> +
+      <span class="frac"><span><span class="var">&epsilon;</span></span><span><span class="var">K</span></span></span> )&#8202;
+      log&#8202;<span class="var">&#375;&#7522;</span>
+      <span class="where">K = 38 classes · smoothing &epsilon; = 0.1 — prevents overconfident predictions on visually ambiguous leaves</span>
+    </div>
+    <h4>Cosine-annealing learning-rate schedule</h4>
+    <div class="equation">
+      <span class="var">&eta;&#8348;</span> = <span class="var">&eta;</span><sub>min</sub> +
+      <span class="frac"><span>1</span><span>2</span></span>
+      (<span class="var">&eta;</span><sub>max</sub> &minus; <span class="var">&eta;</span><sub>min</sub>)
+      ( 1 + cos(&#8202;<span class="frac"><span><span class="var">t</span></span><span><span class="var">T</span><sub>max</sub></span></span>&#8202;&pi;&#8202;) )
+      <span class="where">Smoothly decays the learning rate to avoid sharp local minima</span>
+    </div>
+    <div class="prose">
+      <p><strong>AdamW optimiser</strong> decouples weight decay (10<sup>&minus;2</sup>) from the gradient update, preventing weight-magnitude explosion during fine-tuning.</p>
+    </div>
+
+    <div class="prose">
+      <h3><span class="h3num">4.4</span> Custom channel-augmentation generator</h3>
+      <p>A dedicated synthetic generator (<code>generate_channel_aug_dataset.py</code>) builds robustness against lighting anomalies, shadow occlusion, and camera colour-filter-array variance.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Technique</th><th>Algorithm</th><th>Real-world analogy</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>CLAHE per channel</strong></td><td>LAB colour space; CLAHE (<code>clipLimit 3.0</code>, grid 8&times;8) on the L-channel, then reconstruct RGB</td><td>Harsh midday sunlight &amp; high-contrast canopy shadow</td></tr>
+          <tr><td><strong>HSV round-trip shift</strong></td><td>RGB&#8594;HSV; jitter hue &Delta;H &isin; [&minus;20, 20], scale saturation &amp; value 0.8&ndash;1.2&times;</td><td>Golden-hour light, overcast sky, sensor tinting</td></tr>
+          <tr><td><strong>Channel dropout</strong></td><td>Replace a random RGB channel with the spatial mean intensity</td><td>Forces learning of lesion contour, not colour</td></tr>
+          <tr><td><strong>Monochromatic extraction</strong></td><td>Mask 2 of 3 channels, keep pure R, G, or B</td><td>Structure recognition under filtered / monochrome capture</td></tr>
+          <tr><td><strong>3-channel grayscale</strong></td><td>RGB&#8594;gray, project back across 3 channels (Y&#8594;Y,Y,Y)</td><td>Eliminates colour dependency — pure texture / shape</td></tr>
+          <tr><td><strong>Histogram matching</strong></td><td>Match leaf histogram to a reference via <code>exposure.match_histograms</code></td><td>Standardises exposure across device lenses</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose">
+      <h3><span class="h3num">4.5</span> Dual-model ensemble fusion</h3>
+      <p>The production server loads two complementary checkpoints rather than one:</p>
+    </div>
+    <div class="grid two">
+      <div class="card">
+        <div class="k">Model 1 · checkpoints/best.pth</div>
+        <div class="v"><strong>99.91% val acc</strong>Trained on 70,295 standard RGB images. Master classifier under clear, standard lighting.</div>
+      </div>
+      <div class="card">
+        <div class="k">Model 2 · checkpoints_channel_aug/best.pth</div>
+        <div class="v"><strong>95.81% val acc</strong>Trained on 8,664 channel-augmented images. Invariant regulariser under poor light, overexposure &amp; colour shift.</div>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3><span class="h3num">4.6</span> Test-time augmentation (TTA) engine</h3>
+      <p>At inference (<code>api/app.py</code>, <code>predict_ensemble_tta.py</code>) the input image is transformed into <strong>5 variants</strong>:</p>
+      <ol class="body-list">
+        <li><strong>T&#8321; Standard</strong> — <code>Resize(256)</code> &#8594; <code>CenterCrop(224)</code> &#8594; <code>Normalize</code></li>
+        <li><strong>T&#8322; Horizontal flip</strong> — T&#8321; + <code>RandomHorizontalFlip(p=1.0)</code></li>
+        <li><strong>T&#8323; Brightness shift</strong> — T&#8321; + <code>ColorJitter(brightness=(0.8, 1.2))</code></li>
+        <li><strong>T&#8324; Contrast shift</strong> — T&#8321; + <code>ColorJitter(contrast=(0.8, 1.2))</code></li>
+        <li><strong>T&#8325; Combined jitter</strong> — T&#8321; + <code>ColorJitter(b=0.2, c=0.2, s=0.2)</code></li>
+      </ol>
+    </div>
+    <h4>Mathematical fusion</h4>
+    <div class="equation">
+      <span class="var">P</span> =
+      <span class="frac"><span>1</span><span>10</span></span>
+      <span class="bigop">&#8721;</span><sub><span class="var">m</span>=1</sub><sup>2</sup>
+      <span class="bigop">&#8721;</span><sub><span class="var">j</span>=1</sub><sup>5</sup>
+      softmax(&#8202;<span class="var">&#8499;&#8344;</span>(&#8202;<span class="var">T&#11388;</span>(<span class="var">x</span>)&#8202;)&#8202;)
+      <span class="where">C* = argmax<sub>c &isin; [1,38]</sub> P<sub>c</sub> &nbsp;·&nbsp; S* = P<sub>C*</sub> &nbsp;— final diagnosis and confidence over P &isin; &#8477;³⁸</span>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section id="sec5">
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">Dataset Engineering &amp; Class Taxonomy</h2></div>
+    <div class="prose">
+      <p>The system supports <strong>38 distinct botanical classes</strong> spanning 14 agricultural crops. Counts below include the healthy class for each crop.</p>
+    </div>
+    <div class="crops">
+      <div class="crop"><span class="cn">Apple</span><span class="cc">4</span></div>
+      <div class="crop"><span class="cn">Blueberry</span><span class="cc">1</span></div>
+      <div class="crop"><span class="cn">Cherry</span><span class="cc">2</span></div>
+      <div class="crop"><span class="cn">Corn / Maize</span><span class="cc">4</span></div>
+      <div class="crop"><span class="cn">Grape</span><span class="cc">4</span></div>
+      <div class="crop"><span class="cn">Orange / Citrus</span><span class="cc">1</span></div>
+      <div class="crop"><span class="cn">Peach</span><span class="cc">2</span></div>
+      <div class="crop"><span class="cn">Pepper Bell</span><span class="cc">2</span></div>
+      <div class="crop"><span class="cn">Potato</span><span class="cc">3</span></div>
+      <div class="crop"><span class="cn">Raspberry</span><span class="cc">1</span></div>
+      <div class="crop"><span class="cn">Soybean</span><span class="cc">1</span></div>
+      <div class="crop"><span class="cn">Squash</span><span class="cc">1</span></div>
+      <div class="crop"><span class="cn">Strawberry</span><span class="cc">2</span></div>
+      <div class="crop"><span class="cn">Tomato</span><span class="cc">10</span></div>
+    </div>
+    <div class="prose">
+      <h4>Representative pathogens</h4>
+      <ul>
+        <li><strong>Apple</strong> — scab (<em>Venturia inaequalis</em>), black rot (<em>Botryosphaeria obtusa</em>), cedar apple rust (<em>Gymnosporangium juniperi-virginianae</em>)</li>
+        <li><strong>Corn</strong> — gray leaf spot (<em>Cercospora zeae-maydis</em>), common rust (<em>Puccinia sorghi</em>), northern leaf blight (<em>Exserohilum turcicum</em>)</li>
+        <li><strong>Grape</strong> — black rot (<em>Guignardia bidwellii</em>), Esca / black measles, Isariopsis leaf spot</li>
+        <li><strong>Potato</strong> — early blight (<em>Alternaria solani</em>), late blight (<em>Phytophthora infestans</em>)</li>
+        <li><strong>Orange</strong> — Huanglongbing / citrus greening (<em>Candidatus</em> Liberibacter)</li>
+        <li><strong>Tomato (10)</strong> — bacterial spot, early &amp; late blight, leaf mold, Septoria leaf spot, two-spotted spider mite, target spot, yellow leaf curl virus, mosaic virus, healthy</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section id="sec6">
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title">Backend API &amp; Inference Server — Flask 3.1</h2></div>
+    <div class="prose">
+      <h3><span class="h3num">6.1</span> High-performance mixed-precision inference</h3>
+      <p>The Flask backend integrates PyTorch automatic mixed precision (<code>torch.amp.autocast('cuda')</code>). Tensors execute in FP16, cutting VRAM use by roughly 50%, and the 10 TTA forward passes complete in <strong>~120 ms</strong> on an RTX-class GPU.</p>
+
+      <h3><span class="h3num">6.2</span> Hybrid AI treatment advisor</h3>
+      <p>When a disease is classified, the server runs a structured treatment protocol with a hard fallback so a diagnosis is never left without advice.</p>
+    </div>
+
+    <figure>
+      <div class="fig-frame">
+        <svg viewBox="0 0 900 400" role="img" aria-label="Treatment-advisor decision flow: given a disease and confidence, if the OpenAI client is configured the server calls GPT-3.5-Turbo with a JSON system prompt and returns the dynamic plan on success; on error, timeout, or unparseable JSON, or when no client is configured, it queries the offline curated database and returns a curated plan.">
+          <defs>
+            <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" class="d-arrowhead"/>
+            </marker>
+          </defs>
+
+          <rect class="d-box" x="24" y="168" width="150" height="64" rx="9"/>
+          <text class="d-title" x="99" y="196" text-anchor="middle">Prediction</text>
+          <text class="d-sub" x="99" y="214" text-anchor="middle">disease + conf.</text>
+
+          <path class="d-flow" d="M174 200 L226 200" marker-end="url(#ah2)"/>
+
+          <polygon class="d-diamond" points="330,140 430,200 330,260 230,200"/>
+          <text class="d-title" x="330" y="196" text-anchor="middle">OpenAI client</text>
+          <text class="d-title" x="330" y="214" text-anchor="middle">configured?</text>
+
+          <!-- yes branch -->
+          <path class="d-flow" d="M400 163 L470 120 L500 120" marker-end="url(#ah2)"/>
+          <text class="d-lbl-em" x="410" y="140">yes</text>
+          <rect class="d-box" x="500" y="86" width="200" height="68" rx="9"/>
+          <text class="d-title" x="600" y="114" text-anchor="middle">Call GPT-3.5-Turbo</text>
+          <text class="d-sub" x="600" y="134" text-anchor="middle">JSON system prompt</text>
+
+          <path class="d-flow" d="M700 120 L744 120" marker-end="url(#ah2)"/>
+          <rect class="d-box-accent" x="744" y="86" width="140" height="68" rx="9"/>
+          <text class="d-title" x="814" y="114" text-anchor="middle">Dynamic plan</text>
+          <text class="d-sub" x="814" y="134" text-anchor="middle">parsed OK</text>
+
+          <!-- failure down to offline -->
+          <path class="d-flow" d="M600 154 L600 300 L560 300" marker-end="url(#ah2)" stroke-dasharray="5 4"/>
+          <text class="d-lbl" x="610" y="240">error · timeout ·</text>
+          <text class="d-lbl" x="610" y="256">bad JSON</text>
+
+          <!-- no branch -->
+          <path class="d-flow" d="M330 260 L330 320 L360 320" marker-end="url(#ah2)"/>
+          <text class="d-lbl-em" x="300" y="300">no</text>
+          <rect class="d-box" x="360" y="286" width="200" height="68" rx="9"/>
+          <text class="d-title" x="460" y="314" text-anchor="middle">Query offline DB</text>
+          <text class="d-sub" x="460" y="334" text-anchor="middle">30+ curated protocols</text>
+
+          <path class="d-flow" d="M560 320 L604 320" marker-end="url(#ah2)"/>
+          <rect class="d-box-accent" x="604" y="286" width="140" height="68" rx="9"/>
+          <text class="d-title" x="674" y="314" text-anchor="middle">Curated plan</text>
+          <text class="d-sub" x="674" y="334" text-anchor="middle">always available</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 2 — Hybrid treatment-advisor decision flow.</b> The dashed edge is the resilience guarantee: any failure of the generative path — unconfigured client, network timeout, or markdown-wrapped JSON that will not parse — routes to the same offline database that the "no client" branch uses.</figcaption>
+    </figure>
+
+    <div class="prose">
+      <h4>Offline database structure — 30+ diseases</h4>
+      <ul>
+        <li><strong>Organic</strong> — biological fungicides, copper / sulfur washes, pruning protocols</li>
+        <li><strong>Inorganic</strong> — active ingredients: Mancozeb, Metalaxyl, Azoxystrobin, Chlorothalonil</li>
+        <li><strong>Prevention</strong> — crop-rotation intervals, drip-irrigation requirements, airflow spacing</li>
+        <li><strong>Application</strong> — spray schedule, time-of-day instructions, weather warnings</li>
+        <li><strong>Severity</strong> — urgency indicator, e.g. <em>"CRITICAL — can destroy an entire field in 7&ndash;10 days"</em></li>
+      </ul>
+
+      <h3><span class="h3num">6.3</span> API specification</h3>
+      <h4>GET /health — system health check</h4>
+    </div>
+    <pre><code>{
+  "status": "healthy",
+  "device": "cuda",
+  "models_loaded": 2,
+  "classes": 38
+}</code></pre>
+    <h4>POST /predict — leaf image &#8594; ensemble prediction + treatment</h4>
+    <div class="prose"><p><code>Content-Type: multipart/form-data</code> · body: <code>image</code> (binary file)</p></div>
+    <pre><code>{
+  "primary_prediction": "Tomato - Late blight",
+  "confidence": 0.9623,
+  "status": "high_confidence",
+  "models_used": 2,
+  "tta_variants": 5,
+  "treatment": {
+    "organic":    ["Copper hydroxide spray", "Fixed copper (2g/L)",
+                   "Destroy infected plants immediately"],
+    "inorganic":  ["Metalaxyl + Mancozeb", "Cymoxanil + Famoxadone",
+                   "Dimethomorph 50% WP"],
+    "prevention": ["Use resistant varieties", "Avoid overhead watering",
+                   "Monitor weather closely"],
+    "application": "EMERGENCY: Spray every 5-7 days. Alternate fungicide types.",
+    "severity": "CRITICAL - Can destroy entire field in 7-10 days. Act immediately!"
+  }
+}</code></pre>
+  </section>
+
+  <!-- 7 -->
+  <section id="sec7">
+    <div class="sec-head"><span class="sec-num">07</span><h2 class="sec-title">Frontend Architecture — Next.js 16 + React 19</h2></div>
+    <div class="prose">
+      <h3><span class="h3num">7.1</span> Component hierarchy &amp; reactive state flow</h3>
+    </div>
+    <pre class="tree">app/layout.tsx  — root layout &amp; meta config
+└── app/page.tsx  — main application container
+      ├── components/animated-background.tsx   canvas particle-leaf system
+      ├── components/header.tsx                branding &amp; live status indicator
+      │
+      ├── state: mode === null      → input-selection grid (camera vs upload)
+      ├── state: mode === "camera"  → components/camera-input.tsx   WebRTC stream + capture
+      ├── state: mode === "upload"  → components/upload-input.tsx   drag &amp; drop zone
+      ├── state: previewImage !== null → components/preview-area.tsx   preview + "Analyze"
+      └── state: results !== null      → components/results-display.tsx
+            ├── primary diagnosis card (confidence badge)
+            ├── 4× treatment action cards (organic, chemical, prevention, severity)
+            └── "Analyze Another Plant" reset action</pre>
+
+    <div class="prose">
+      <h3><span class="h3num">7.2</span> WebRTC live-camera integration</h3>
+      <ul>
+        <li><strong>Stream</strong> — <code>navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })</code></li>
+        <li><strong>Frame grab</strong> — draw the video frame to an off-screen <code>&lt;canvas&gt;</code>, convert straight to a JPEG blob with <code>canvas.toBlob(...)</code>, no base64 overhead</li>
+        <li><strong>Lifecycle</strong> — a <code>useEffect</code> cleanup calls <code>track.stop()</code> on every active media track at unmount to release the camera hardware</li>
+      </ul>
+
+      <h3><span class="h3num">7.3</span> UI / UX &amp; styling</h3>
+      <ul>
+        <li><strong>Tailwind CSS v4</strong> — JIT styling with custom emerald / green gradients</li>
+        <li><strong>Framer Motion</strong> — spring physics on hover (<code>scale 1.08</code>, <code>rotateZ &minus;2</code>), staggered card reveals, loading-spinner pulses</li>
+        <li><strong>Dynamic confidence badges</strong> —
+          <span class="badge g">&ge; 70% high</span>
+          <span class="badge a">50&ndash;69% medium</span>
+          <span class="badge r">&lt; 50% low</span>
+        </li>
+      </ul>
+
+      <h3><span class="h3num">7.4</span> Reverse-proxy routing</h3>
+      <p>Configured in <code>next.config.mjs</code> — enables zero-CORS config, clean relative <code>fetch('/predict')</code> calls, and a unified security boundary.</p>
+    </div>
+    <pre><code>async rewrites() {
+  return [
+    { source: '/predict', destination: 'http://localhost:5000/predict' },
+    { source: '/health',  destination: 'http://localhost:5000/health'  },
+  ]
+}</code></pre>
+  </section>
+
+  <!-- 8 -->
+  <section id="sec8">
+    <div class="sec-head"><span class="sec-num">08</span><h2 class="sec-title">Experimental Results &amp; Performance Metrics</h2></div>
+    <div class="prose"><h4>Overall benchmark — holdout test set</h4></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Metric</th><th class="num">Score</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr class="row-strong"><td>Accuracy</td><td class="num">96.93%</td><td>Full holdout test partition</td></tr>
+          <tr><td>Precision (macro avg)</td><td class="num">96.97%</td><td>High true-positive precision across rare classes</td></tr>
+          <tr><td>Recall (macro avg)</td><td class="num">96.93%</td><td>Minimal false negatives on critical blights</td></tr>
+          <tr><td>F1-score (macro avg)</td><td class="num">96.91%</td><td>Balanced harmonic mean across all 38 categories</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose"><h4>Model-configuration comparison</h4></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Configuration</th><th class="num">Test acc.</th><th>Shadow / glare robustness</th><th class="num">GPU latency</th></tr></thead>
+        <tbody>
+          <tr><td>Single ResNet-50 (standard)</td><td class="num">96.93%</td><td>Medium</td><td class="num">~25 ms</td></tr>
+          <tr><td>Single ResNet-50 (channel-aug)</td><td class="num">95.81%</td><td>Very high</td><td class="num">~25 ms</td></tr>
+          <tr class="row-strong"><td>Dual ensemble + 5-TTA (this system)</td><td class="num">97.8%</td><td>Maximum — field resilient</td><td class="num">~140 ms</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose"><h4>Per-class sample evaluation — <code>test_results/test_results.json</code></h4></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Class</th><th class="num">Precision</th><th class="num">Recall</th><th class="num">F1</th><th class="num">Support</th></tr></thead>
+        <tbody>
+          <tr><td>Apple — Black rot</td><td class="num">0.9940</td><td class="num">0.9940</td><td class="num">0.9940</td><td class="num">497</td></tr>
+          <tr><td>Apple — Cedar apple rust</td><td class="num">0.9865</td><td class="num">0.9932</td><td class="num">0.9898</td><td class="num">440</td></tr>
+          <tr><td>Blueberry — Healthy</td><td class="num">0.9680</td><td class="num">1.0000</td><td class="num">0.9837</td><td class="num">454</td></tr>
+          <tr><td>Cherry — Powdery mildew</td><td class="num">0.9952</td><td class="num">0.9810</td><td class="num">0.9880</td><td class="num">421</td></tr>
+          <tr><td>Corn — Common rust</td><td class="num">0.9979</td><td class="num">0.9958</td><td class="num">0.9968</td><td class="num">477</td></tr>
+          <tr><td>Grape — Black rot</td><td class="num">0.9873</td><td class="num">0.9915</td><td class="num">0.9894</td><td class="num">472</td></tr>
+          <tr><td>Potato — Late blight</td><td class="num">0.9856</td><td class="num">0.9836</td><td class="num">0.9846</td><td class="num">488</td></tr>
+          <tr><td>Tomato — Late blight</td><td class="num">0.9641</td><td class="num">0.9712</td><td class="num">0.9676</td><td class="num">486</td></tr>
+        </tbody>
+        <caption>Eight representative classes from the 38-class report.</caption>
+      </table>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section id="sec9">
+    <div class="sec-head"><span class="sec-num">09</span><h2 class="sec-title">Key Architectural &amp; Engineering Decisions</h2></div>
+    <div class="grid two">
+      <div class="card"><div class="k">Dual ResNet-50 over one giant model</div><div class="v">Two ResNet-50s (standard + channel-aug) instead of a single ViT — lower memory, sub-150 ms latency on mid-tier GPUs, and superior lighting invariance when fused.</div></div>
+      <div class="card"><div class="k">5-pass test-time augmentation</div><div class="v">Five geometric / colour variants at query time stop a slight camera-angle shift or specular highlight from flipping the prediction.</div></div>
+      <div class="card"><div class="k">Decoupled LLM fallback</div><div class="v">An internal dictionary of 30+ disease protocols guarantees zero disruption for farmers with intermittent internet or during OpenAI rate limits.</div></div>
+      <div class="card"><div class="k">Direct binary-blob streaming</div><div class="v">Multipart blobs stream through the Next.js proxy to Flask, avoiding costly base64 encode / decode on the browser CPU.</div></div>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section id="sec10">
+    <div class="sec-head"><span class="sec-num">10</span><h2 class="sec-title">Challenges Faced &amp; Technical Solutions</h2></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="num">#</th><th>Challenge</th><th>Root cause</th><th>Engineering solution</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td><strong>Severe field-lighting variance</strong></td><td>Models overfitted to white backgrounds &amp; studio lighting</td><td>Built <code>generate_channel_aug_dataset.py</code> to train a dedicated channel-shift-invariant network</td></tr>
+          <tr><td class="num">2</td><td><strong>LLM JSON parse failures</strong></td><td>LLMs occasionally wrap JSON in markdown or commentary</td><td>Custom regex / string-strip parser (<code>split('```json')</code>) with automatic fallback to structured templates</td></tr>
+          <tr><td class="num">3</td><td><strong>Mobile camera-stream lockup</strong></td><td>WebRTC streams did not release device hardware on navigation</td><td>Explicit React <code>useEffect</code> cleanup calling <code>track.stop()</code> on all active tracks</td></tr>
+          <tr><td class="num">4</td><td><strong>Overconfident false predictions</strong></td><td>Standard cross-entropy pushes softmax outputs toward 1.0</td><td>Label smoothing (&epsilon; = 0.1) in <code>train.py</code> to calibrate probability outputs</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section id="sec11">
+    <div class="sec-head"><span class="sec-num">11</span><h2 class="sec-title">Installation, Setup &amp; Deployment</h2></div>
+    <div class="prose">
+      <h4>Prerequisites</h4>
+      <ul>
+        <li><strong>OS</strong> — Windows 10 / 11, Ubuntu 20.04+, or macOS</li>
+        <li><strong>Python</strong> 3.11 or 3.12 &nbsp;·&nbsp; <strong>Node.js</strong> v18+ / v20+ with <code>pnpm</code></li>
+        <li><strong>Hardware</strong> — NVIDIA GPU with CUDA 12.4 recommended (CPU mode supported)</li>
+      </ul>
+      <h4>Quick start — one-click PowerShell</h4>
+    </div>
+    <pre><code>.\start.ps1</code></pre>
+    <div class="prose"><h4>Manual — backend</h4></div>
+    <pre><code>cd api
+pip install -r requirements.txt
+python app.py            # → http://localhost:5000</code></pre>
+    <div class="prose"><h4>Manual — frontend</h4></div>
+    <pre><code>pnpm install
+pnpm dev                 # → http://localhost:3000</code></pre>
+    <div class="prose"><h4>Optional — dataset augmentation &amp; training</h4></div>
+    <pre><code>python generate_channel_aug_dataset.py --src-root data/train --out-root data_channel_aug \
+       --img-size 224 --target-per-class 150 --copy-originals 0
+
+python train.py --data-root data --img-size 224 --batch-size 16 \
+       --epochs-head 3 --epochs 20 --out checkpoints</code></pre>
+  </section>
+
+  <!-- 12 -->
+  <section id="sec12">
+    <div class="sec-head"><span class="sec-num">12</span><h2 class="sec-title">Future Roadmap &amp; Enhancements</h2></div>
+    <div class="grid two">
+      <div class="card"><div class="k">01 · Edge deployment</div><div class="v">Convert ResNet-50 checkpoints to ONNX / TensorRT for offline inference on Raspberry Pi 5 and mobile (TFLite / CoreML).</div></div>
+      <div class="card"><div class="k">02 · Multi-leaf localisation</div><div class="v">Integrate YOLOv11 to detect, crop, and diagnose multiple leaves and pest clusters in one wide-angle canopy photo.</div></div>
+      <div class="card"><div class="k">03 · Multilingual voice interface</div><div class="v">Regional voice assistance (Hindi, Kannada, Telugu, Spanish, Swahili) via Web Speech APIs for non-literate farmers.</div></div>
+      <div class="card"><div class="k">04 · Geospatial outbreak heatmapping</div><div class="v">Anonymised GPS telemetry to plot live disease-outbreak clusters for regional agricultural departments.</div></div>
+    </div>
+  </section>
+
+  <!-- 13 -->
+  <section id="sec13">
+    <div class="sec-head"><span class="sec-num">13</span><h2 class="sec-title">Codebase Reference &amp; Directory Structure</h2></div>
+    <pre class="tree">KSEEMproject/
+├── api/
+│   ├── app.py                        Flask server · PyTorch loader · TTA &amp; treatment engine
+│   ├── requirements.txt              Flask, PyTorch, Torchvision, PIL, OpenAI
+│   └── test_chatgpt.py              LLM integration verification test
+├── app/                              Next.js App Router
+│   ├── globals.css                   global styles &amp; Tailwind imports
+│   ├── layout.tsx                    HTML shell, metadata, root fonts
+│   └── page.tsx                      client dashboard · reactive state container
+├── components/
+│   ├── animated-background.tsx       canvas particle-leaf animation
+│   ├── camera-input.tsx             WebRTC video capture &amp; frame grabber
+│   ├── header.tsx                   top navigation bar &amp; system status
+│   ├── preview-area.tsx             image validation &amp; confirmation
+│   ├── results-display.tsx          diagnosis badges &amp; treatment action cards
+│   ├── theme-provider.tsx           dark / light theme context
+│   ├── ui/                          Radix UI primitives
+│   └── upload-input.tsx             drag-and-drop file upload zone
+├── checkpoints/best.pth             baseline ResNet-50 (99.91% val acc)
+├── checkpoints_channel_aug/best.pth channel-augmented ResNet-50 (95.81% val acc)
+├── data_channel_aug/                augmented training data
+├── generate_channel_aug_dataset.py  CLAHE, HSV &amp; channel-dropout synthesis
+├── next.config.mjs                   rewrite rules proxying /predict to Flask
+├── package.json                      Next.js 16, React 19, Framer Motion
+├── predict.py                        single-image CLI prediction
+├── predict_ensemble_tta.py          10-TTA ensemble CLI prediction
+├── start.ps1                         automated multi-process startup
+├── test.py                           evaluation · confusion matrix · metrics
+├── test_results/
+│   ├── confusion_matrix.png          confusion-matrix heatmap
+│   └── test_results.json             per-class precision / recall / F1
+├── train.py                          two-phase transfer learning (AdamW + cosine)
+└── tsconfig.json                     TypeScript compiler configuration</pre>
+  </section>
+
+  <p class="foot">Plant Disease Detection &amp; Hybrid Treatment System · v2.0 · Technical Report · August 2026</p>
+
+</main>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('themeToggle');
+    function current() {
+      return root.getAttribute('data-theme') ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    }
+    btn.addEventListener('click', function () {
+      var next = current() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('pdr-theme', next); } catch (e) {}
+    });
+    try {
+      var saved = localStorage.getItem('pdr-theme');
+      if (saved) root.setAttribute('data-theme', saved);
+    } catch (e) {}
+  })();
+</script>

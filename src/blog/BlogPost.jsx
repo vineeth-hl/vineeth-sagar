@@ -5,6 +5,7 @@ import { getPost } from './posts';
 import { mdxComponents } from './mdx-components';
 import DownloadButton from './DownloadButton';
 import TableOfContents from './TableOfContents';
+import MermaidRenderer from './MermaidRenderer';
 import useTitle from './useTitle';
 
 export default function BlogPost() {
@@ -20,6 +21,7 @@ export default function BlogPost() {
     return (
         <>
             <TableOfContents headings={post.headings} />
+            <MermaidRenderer />
 
             <article className="mx-auto max-w-[46rem] px-5 pb-12 pt-14 md:pb-24">
                 <Link to="/blog" className="text-xs font-medium uppercase tracking-[0.25em] text-secondary hover:text-primary">
@@ -77,7 +79,7 @@ export default function BlogPost() {
                 </div>
             </article>
 
-            <DownloadButton url={post.reportUrl} />
+            <DownloadButton downloads={post.downloads} />
         </>
     );
 }

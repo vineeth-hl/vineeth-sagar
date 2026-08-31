@@ -109,6 +109,25 @@ html.lenis body {
   overflow-x: auto;
 }
 
+/* Mermaid diagrams — hide the raw source until the client renders the SVG,
+   then show a centered, transparent, horizontally-scrollable figure */
+.prose pre.mermaid {
+  border: 0;
+  padding: 0;
+  margin: 1.75rem 0;
+  background: transparent;
+  text-align: center;
+  font-size: 0;
+  line-height: 0;
+}
+.prose pre.mermaid[data-processed="true"] {
+  overflow-x: auto;
+}
+.prose pre.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
 .prose pre code {
   font-family: "JetBrains Mono", ui-monospace, monospace;
   background: transparent;

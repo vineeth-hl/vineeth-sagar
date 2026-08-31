@@ -42,6 +42,30 @@ function remarkTocHeadings() {
     };
 }
 
+// rehype plugin: turn ```mermaid fenced code into <pre class="mermaid"> holding
+// the raw graph source, so rehype-highlight leaves it alone and the client-side
+// MermaidRenderer can pick it up. Must run BEFORE rehype-highlight.
+function rehypeMermaid() {
+    return (tree) => {
+        visit(tree, 'element', (node, index, parent) => {
+            if (!parent || node.tagName !== 'pre' || !Array.isArray(node.children)) return;
+            const code = node.children.find((c) => c.tagName === 'code');
+            const cls = code?.properties?.className;
+            if (!code || !Array.isArray(cls) || !cls.includes('language-mermaid')) return;
+            const text = (code.children || [])
+                .filter((c) => c.type === 'text')
+                .map((c) => c.value)
+                .join('');
+            parent.children[index] = {
+                type: 'element',
+                tagName: 'pre',
+                properties: { className: ['mermaid'] },
+                children: [{ type: 'text', value: text }]
+            };
+        });
+    };
+}
+
 // remark plugin: inject `export const readingMinutes = <n>` into each MDX module
 function remarkReadingTime() {
     return (tree) => {
@@ -157,6 +181,7 @@ export default defineConfig({
                 ],
                 rehypePlugins: [
                     rehypeSlug,
+                    rehypeMermaid,
                     [rehypeHighlight, { detect: true, ignoreMissing: true }],
                     [rehypeKatex, { strict: false }]
                 ],
