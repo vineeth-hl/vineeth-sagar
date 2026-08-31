@@ -129,7 +129,7 @@ const Hero = () => {
                 <NowPlaying />
             </motion.div>
 
-            {/* "Watching on YouTube" widget — mirrors Now Playing on the right */}
+            {/* "Latest on YouTube" widget — mirrors Now Playing on the right */}
             <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
