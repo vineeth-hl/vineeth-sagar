@@ -7,9 +7,40 @@ import mdx from '@mdx-js/rollup';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import rehypeSlug from 'rehype-slug';
 import rehypeHighlight from 'rehype-highlight';
+import rehypeKatex from 'rehype-katex';
 import { toString as mdastToString } from 'mdast-util-to-string';
+import { visit } from 'unist-util-visit';
+import { parse as acornParse } from 'acorn';
+import GithubSlugger from 'github-slugger';
+
+// inject an ESM export into an MDX module from a source string
+function injectEsm(tree, code) {
+    tree.children.unshift({
+        type: 'mdxjsEsm',
+        value: code,
+        data: { estree: acornParse(code, { ecmaVersion: 'latest', sourceType: 'module' }) }
+    });
+}
+
+// remark plugin: inject `export const headings = [{ id, text, level }]` built
+// from the h2/h3 headings, with slugs that match rehype-slug (github-slugger).
+// Done at build time so the TOC has data without reading the DOM after render.
+function remarkTocHeadings() {
+    return (tree) => {
+        const slugger = new GithubSlugger();
+        const headings = [];
+        visit(tree, 'heading', (node) => {
+            if (node.depth < 2 || node.depth > 3) return;
+            const text = mdastToString(node).trim();
+            if (!text) return;
+            headings.push({ id: slugger.slug(text), text, level: node.depth });
+        });
+        injectEsm(tree, `export const headings = ${JSON.stringify(headings)}`);
+    };
+}
 
 // remark plugin: inject `export const readingMinutes = <n>` into each MDX module
 function remarkReadingTime() {
@@ -120,9 +151,15 @@ export default defineConfig({
                     remarkFrontmatter,
                     [remarkMdxFrontmatter, { name: 'frontmatter' }],
                     remarkGfm,
-                    remarkReadingTime
+                    remarkMath,
+                    remarkReadingTime,
+                    remarkTocHeadings
                 ],
-                rehypePlugins: [rehypeSlug, [rehypeHighlight, { detect: true, ignoreMissing: true }]],
+                rehypePlugins: [
+                    rehypeSlug,
+                    [rehypeHighlight, { detect: true, ignoreMissing: true }],
+                    [rehypeKatex, { strict: false }]
+                ],
                 providerImportSource: '@mdx-js/react'
             })
         },

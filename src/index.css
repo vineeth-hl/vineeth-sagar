@@ -83,6 +83,26 @@ html.lenis body {
   font-weight: 500;
 }
 
+/* heading anchors clear the sticky blog header when jumped to from the TOC */
+.prose :where(h2, h3, h4) {
+  scroll-margin-top: 6rem;
+}
+
+/* KaTeX in a dark reading column */
+.prose .katex {
+  color: rgb(var(--text-primary));
+  font-size: 1.02em;
+}
+.prose .katex-display {
+  margin: 1.4rem 0;
+  padding: 0.2rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.prose .katex-display > .katex {
+  white-space: nowrap;
+}
+
 .prose pre {
   border-radius: 0.6rem;
   padding: 1rem 1.15rem;
