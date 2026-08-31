@@ -15,12 +15,11 @@ export default function BlogIndex() {
 
             <header className="mb-14 max-w-2xl">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-[0.35em] text-accent-blue">Writing</p>
-                <h1 className="text-4xl font-extrabold tracking-tight text-primary md:text-5xl">
-                    Notes on AI/ML &amp; full-stack engineering
+                <h1 className="text-4xl font-extrabold uppercase tracking-tight text-primary md:text-5xl">
+                    Vineeth Sagar H.L.
                 </h1>
-                <p className="mt-4 text-base leading-relaxed text-secondary">
-                    Deep dives on the systems I build — RAG pipelines, temporal graph models, explainable AI, and the
-                    infrastructure around them. Each post links its full technical report.
+                <p className="mt-4 text-base italic leading-relaxed text-secondary">
+                    &ldquo;Look closely at the world around you; the best details are often hidden in plain sight.&rdquo;
                 </p>
             </header>
 
