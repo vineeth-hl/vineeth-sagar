@@ -40,9 +40,10 @@ const Navbar = () => {
         <button
             onClick={toggleTheme}
             aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
-            className={`flex h-8 w-8 items-center justify-center rounded-md border border-line text-secondary hover:text-accent-gold hover:border-accent-gold transition-colors ${className}`}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line bg-card/50 text-secondary transition-colors hover:border-accent-gold hover:text-accent-gold ${className}`}
         >
-            {theme === 'dark' ? <FaSun size={13} /> : <FaMoon size={13} />}
+            {theme === 'dark' ? <FaSun size={15} /> : <FaMoon size={15} />}
         </button>
     );
 
@@ -75,7 +76,7 @@ const Navbar = () => {
                 </div>
 
                 {/* --- DESKTOP VIEW: Links + toggle + Resume --- */}
-                <div className="hidden md:flex items-center justify-center gap-6 w-full">
+                <div className="hidden md:flex items-center justify-center gap-4 w-full">
                     <ul className="flex gap-6 text-sm font-medium text-secondary">
                         {navLinks.map((item) => (
                             <li key={item}>

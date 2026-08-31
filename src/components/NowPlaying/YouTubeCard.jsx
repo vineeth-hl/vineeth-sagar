@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import TiltedCard from './TiltedCard';
+import { saveLast, loadLast } from './lastMedia';
 
 /**
  * "Watching on YouTube" widget for the hero — mirrors <NowPlaying/> (Spotify),
@@ -49,20 +50,27 @@ const YouTubeMark = ({ className = '' }) => (
   </svg>
 );
 
-// Discord asset key -> displayable URL
-function resolveImage(activity) {
-  const img = activity?.assets?.large_image || activity?.assets?.small_image;
-  if (!img) return null;
-  if (img.startsWith('mp:')) return `https://media.discordapp.net/${img.slice(3)}`;
-  if (/^https?:\/\//.test(img)) return img;
-  if (/^\d+$/.test(img) && activity.application_id) {
-    return `https://cdn.discordapp.com/app-assets/${activity.application_id}/${img}.png`;
+// Pull { thumb, videoId } out of a Discord/PreMiD YouTube activity. The image
+// key usually embeds the real thumbnail path (…/i.ytimg.com/vi/<id>/…), which
+// gives us both a stable thumbnail and the watch URL.
+function resolveMedia(activity) {
+  const img = activity?.assets?.large_image || activity?.assets?.small_image || '';
+  const vid = img.match(/(?:i\.ytimg\.com|img\.youtube\.com)\/vi\/([\w-]{6,})/i);
+  const videoId = vid ? vid[1] : null;
+  if (videoId) return { thumb: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`, videoId };
+
+  let thumb = null;
+  if (img.startsWith('mp:')) thumb = `https://media.discordapp.net/${img.slice(3)}`;
+  else if (/^https?:\/\//.test(img)) thumb = img;
+  else if (/^\d+$/.test(img) && activity.application_id) {
+    thumb = `https://cdn.discordapp.com/app-assets/${activity.application_id}/${img}.png`;
   }
-  return null;
+  return { thumb, videoId: null };
 }
 
 export default function YouTubeCard({ className = '' }) {
   const [video, setVideo] = useState(null);
+  const [last, setLast] = useState(() => loadLast('youtube')); // last video seen
   const [state, setState] = useState(LANYARD_ID ? 'loading' : 'offline'); // loading | watching | offline
   const [nowMs, setNowMs] = useState(() => Date.now());
   const timer = useRef(null);
@@ -80,15 +88,20 @@ export default function YouTubeCard({ className = '' }) {
         const acts = Array.isArray(json?.data?.activities) ? json.data.activities : [];
         const yt = acts.find((a) => /youtube/i.test(a?.name || '') || /youtube/i.test(a?.assets?.large_text || ''));
         if (yt) {
-          setVideo({
+          const { thumb, videoId } = resolveMedia(yt);
+          const v = {
             title: yt.details || yt.name || 'YouTube',
             channel: (yt.state || '').replace(/^by\s+/i, '') || 'YouTube',
-            thumb: resolveImage(yt) || PLACEHOLDER,
-            url: 'https://www.youtube.com/',
+            thumb: thumb || PLACEHOLDER,
+            url: videoId ? `https://www.youtube.com/watch?v=${videoId}` : 'https://www.youtube.com/',
             startMs: yt.timestamps?.start ?? null,
             endMs: yt.timestamps?.end ?? null
-          });
+          };
+          setVideo(v);
           setState('watching');
+          const remembered = { title: v.title, channel: v.channel, thumb: v.thumb, url: v.url };
+          setLast(remembered);
+          saveLast('youtube', remembered);
         } else {
           setVideo(null);
           setState('offline');
@@ -122,29 +135,29 @@ export default function YouTubeCard({ className = '' }) {
   }, [state]);
 
   const watching = state === 'watching' && !!video;
+  const src = watching ? video : last; // fall back to the last video seen
+  const mode = watching ? 'now' : src ? 'last' : 'off';
   const totalMs = watching && video.endMs && video.startMs ? Math.max(0, video.endMs - video.startMs) : 0;
   const elapsedMs = watching && video.startMs ? Math.max(0, nowMs - video.startMs) : 0;
   const pct = totalMs ? Math.min(100, (elapsedMs / totalMs) * 100) : 0;
-  const caption = watching ? `${video.title} — ${video.channel}` : 'Offline';
+  const caption = src ? `${src.title} — ${src.channel}` : 'Offline';
+  const label =
+    mode === 'now' ? 'YouTube · Watching' : mode === 'last' ? 'YouTube · Last Watched' : 'YouTube · Offline';
 
   const overlay = (
     <div className="flex h-full w-full items-center gap-3 rounded-[15px] border border-white/10 bg-[#161616] p-2.5">
       <img
-        src={watching ? video.thumb : PLACEHOLDER}
+        src={src?.thumb || PLACEHOLDER}
         alt=""
-        className="h-[84px] w-[120px] shrink-0 rounded-md object-cover"
+        className={`h-[84px] w-[120px] shrink-0 rounded-md object-cover ${mode === 'last' ? 'opacity-70' : ''}`}
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <p className="line-clamp-2 text-[13px] font-bold leading-tight text-white">
-          {watching ? video.title : 'Nothing playing'}
-        </p>
-        <p className="truncate text-[11px] leading-tight text-white/55">{watching ? video.channel : '—'}</p>
+        <p className="line-clamp-2 text-[13px] font-bold leading-tight text-white">{src?.title || 'Nothing playing'}</p>
+        <p className="truncate text-[11px] leading-tight text-white/55">{src?.channel || '—'}</p>
 
         <div className="mt-1.5 flex items-center gap-1.5">
           <YouTubeMark className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate text-[8.5px] font-semibold uppercase tracking-[0.18em] text-white/45">
-            {watching ? 'YouTube · Watching' : 'YouTube · Offline'}
-          </span>
+          <span className="truncate text-[8.5px] font-semibold uppercase tracking-[0.18em] text-white/45">{label}</span>
         </div>
 
         <div className="mt-1 h-[3px] w-full overflow-hidden rounded-full bg-white/10">
@@ -181,8 +194,8 @@ export default function YouTubeCard({ className = '' }) {
 
   return (
     <div className={className}>
-      {watching ? (
-        <a href={video.url} target="_blank" rel="noopener noreferrer" aria-label={`Open YouTube — ${caption}`}>
+      {src?.url ? (
+        <a href={src.url} target="_blank" rel="noopener noreferrer" aria-label={`Open YouTube — ${caption}`}>
           {card}
         </a>
       ) : (
