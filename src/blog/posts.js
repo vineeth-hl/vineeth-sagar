@@ -7,9 +7,22 @@ const modules = import.meta.glob('./content/*.mdx', { eager: true });
 
 const slugOf = (path) => path.split('/').pop().replace(/\.mdx$/, '');
 
+// Normalise download links: prefer a `downloads: [{ label, url }]` list in
+// frontmatter; fall back to a single `reportUrl`.
+function downloadsOf(fm) {
+    if (Array.isArray(fm.downloads)) {
+        return fm.downloads
+            .filter((d) => d && d.url)
+            .map((d) => ({ label: d.label || 'Download', url: d.url }));
+    }
+    if (fm.reportUrl) return [{ label: 'Project Report', url: fm.reportUrl }];
+    return [];
+}
+
 export const posts = Object.entries(modules)
     .map(([path, mod]) => {
         const fm = mod.frontmatter || {};
+        const downloads = downloadsOf(fm);
         return {
             slug: slugOf(path),
             Component: mod.default,
@@ -18,7 +31,8 @@ export const posts = Object.entries(modules)
             date: fm.date || '',
             tags: Array.isArray(fm.tags) ? fm.tags : [],
             thumbnail: fm.thumbnail || null,
-            reportUrl: fm.reportUrl || null,
+            downloads,
+            reportUrl: downloads[0]?.url || null,
             readingMinutes: mod.readingMinutes || 1,
             headings: Array.isArray(mod.headings) ? mod.headings : []
         };

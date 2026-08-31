@@ -77,7 +77,7 @@ export default function BlogPost() {
                 </div>
             </article>
 
-            <DownloadButton url={post.reportUrl} />
+            <DownloadButton downloads={post.downloads} />
         </>
     );
 }
